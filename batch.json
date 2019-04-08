@@ -4,7 +4,7 @@
 	"name":"Max",
 	"surname":"Mustermann",
 	"date":"14.8.1998",
-	"achievments":[
+	"achievements":[
 		{
 		"name":"breathing",
 		"grade":"A"
@@ -23,7 +23,7 @@
 	"name":"Tim",
 	"surname":"Testperson",
 	"date":"8.4.2019",
-	"achievments":[
+	"achievements":[
 		{
 		"name":"testen",
 		"grade":"A"
