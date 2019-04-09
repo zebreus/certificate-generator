@@ -1,0 +1,6 @@
+{
+"templateFile":"template.tex",
+"batchConfigFile":"batch.json",
+"outputDirectory":"***REMOVED***",
+"verbose":false
+}
