@@ -98,11 +98,31 @@ int main(int argc,const char** argv){
 	//Write .tex files
 	ofstream output;
 	for( certificate_t cert : certificates){
-		output.open(cert.filename, ios::out);
+		string completePath = workingDirectory;
+		completePath.append(cert.filename);
+		output.open(completePath, ios::out);
 		output << cert.content;
 		output.close();
 	}
-
+	
+	//Generate pdfs
+	//TODO besser machen
+	for( certificate_t cert : certificates){
+		string command = "pdflatex -output-directory=";
+		command.append(outputDirectory);
+		command.append(" ");
+		command.append(workingDirectory);
+		command.append(cert.filename);
+		system(command.c_str());
+	}
+	
+	//not working cleanup
+	string remove = "rm ";
+	remove.append(outputDirectory);
+	remove.append("*.aux ");
+	remove.append(outputDirectory);
+	remove.append("*.log");
+	system(remove.c_str());
 }
 
 //Function to replace string in string
