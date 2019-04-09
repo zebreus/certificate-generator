@@ -5,12 +5,17 @@
 #include <sstream>
 #include <vector>
 
+#define DEFAULT_CONFIG "default.json"
+
 using json = nlohmann::json;
 using namespace std;
 
-#define TEMPLATE_FILE "template.tex"
-#define BATCH_CONFIG "batch.json"
-
+bool verbose = false;
+string workingDirectory;
+string templateFile;
+string batchConfigFile;
+string outputDirectory;
+string configFile;
 
 struct certificate_t{
 	string filename;
@@ -18,20 +23,30 @@ struct certificate_t{
 };
 
 bool replace(string&, const string&, const string&);
+void configure(int, const char**);
+void loadConfigFile(const string&);
 
-int main(int argc, char** argv){
+int main(int argc,const char** argv){
+	//Configurate generator
+	configure(argc, argv);
+	
 	//Load json batch
 	ifstream input;
-	input.open(BATCH_CONFIG, ios::in);
+	input.open(batchConfigFile, ios::in);
 	if(!input){
-		cerr << "Error" << endl;
+		cerr << "Error reading batch config" << endl;
+		exit(EXIT_FAILURE);
 	}
 	json batch = json::parse(input);
 	input.close();
 	
 	//TODO make template certificate_t
 	//Load template
-	input.open(TEMPLATE_FILE, ios::in);
+	input.open(templateFile, ios::in);
+		if(!input){
+		cerr << "Error reading template latex" << endl;
+		exit(EXIT_FAILURE);
+	}
 	std::string templateCertificateContent( (std::istreambuf_iterator<char>(input) ),
                        (std::istreambuf_iterator<char>()) );
 	input.close();
@@ -93,4 +108,118 @@ bool replace(string& work, const string& search, const string& replace){
 		return true;
 	}
 	return false;
+}
+
+//Function to load initial configuration
+void configure(int argc, const char** argv){
+	//Load default config
+	if(DEFAULT_CONFIG){
+		loadConfigFile(DEFAULT_CONFIG);
+	}
+	
+	//Parse arguments
+	for(int i = 1;i< argc;i++){
+		if(strcmp(argv[i],"-h")==0){
+		cout << "Usage:" << endl <<
+			"-t template.tex : Specify template file" << endl <<
+			"-b batchfile.json : Specify batch file" << endl <<
+			"-c configfile.json : Specify config file; any previous arguments will be overwritten" << endl <<
+			"-o outputdirectory : Specify output directory" << endl <<
+			"-w workingdirectory : Specify working directory" << endl <<
+			"-v : verbose" << endl <<
+			"-h : help" << endl;
+		exit(EXIT_SUCCESS);
+		}else if(strcmp(argv[i],"-v")==0){
+			verbose = true;
+		}else if(strcmp(argv[i],"-t")==0){
+			i++;
+			if(i < argc){
+				templateFile = argv[i];
+			}else{
+				cerr << "Expected argument after -t" << endl;
+				exit(EXIT_FAILURE);
+			}
+		}else if(strcmp(argv[i],"-b")==0){
+			i++;
+			if(i < argc){
+				batchConfigFile = argv[i];
+			}else{
+				cerr << "Expected argument after -b" << endl;
+				exit(EXIT_FAILURE);
+			}
+		}else if(strcmp(argv[i],"-c")==0){
+			i++;
+			if(i < argc){
+				loadConfigFile(argv[i]);
+			}else{
+				cerr << "Expected argument after -c" << endl;
+				exit(EXIT_FAILURE);
+			}
+		}else if(strcmp(argv[i],"-o")==0){
+			i++;
+			if(i < argc){
+				batchConfigFile = argv[i];
+			}else{
+				cerr << "Expected argument after -o" << endl;
+				exit(EXIT_FAILURE);
+			}
+		}else if(strcmp(argv[i],"-w")==0){
+			i++;
+			if(i < argc){
+				workingDirectory = argv[i];
+			}else{
+				cerr << "Expected argument after -w" << endl;
+				exit(EXIT_FAILURE);
+			}
+		}else{
+			cerr << "Invalid argument: " << argv[i] << endl;
+			cerr << "Try -h to get help" << endl;
+			exit(EXIT_FAILURE);
+		}
+	}
+	
+	//Check if configuration is valid
+	if(templateFile == ""){
+		cerr << "Error: No template specified" << endl;
+		exit(EXIT_FAILURE);
+	}
+	if(batchConfigFile == ""){
+		cerr << "Error: No batch configuration specified" << endl;
+		exit(EXIT_FAILURE);
+	}
+	if(outputDirectory == ""){
+		cerr << "Error: No output directory specified" << endl;
+		exit(EXIT_FAILURE);
+	}
+	if(workingDirectory == ""){
+		cerr << "Error: No working directory specified" << endl;
+		exit(EXIT_FAILURE);
+	}
+}
+
+void loadConfigFile(const string& filename){
+	ifstream input;
+	input.open(filename, ios::in);
+	if(!input){
+		cerr << "Error opening config file: " << filename << endl;
+		exit(EXIT_FAILURE);
+	}
+	json config = json::parse(input);
+	input.close();
+	//TODO catch nlohmann::detail::type_error
+	if(config["outputDirectory"]!=nullptr){
+		outputDirectory = config["outputDirectory"];
+	}
+	if(config["workingDirectory"]!=nullptr){
+		workingDirectory = config["workingDirectory"];
+	}
+	if(config["verbose"]!=nullptr){
+		verbose = config["verbose"];
+	}
+	if(config["batchConfigFile"]!=nullptr){
+		batchConfigFile = config["batchConfigFile"];
+	}
+	if(config["templateFile"]!=nullptr){
+		templateFile = config["templateFile"];
+	}
 }
