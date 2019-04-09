@@ -30,14 +30,20 @@ int main(int argc,const char** argv){
 	//Configurate generator
 	configure(argc, argv);
 	
-	//Load json batch
+	//Load json batch configuration
 	ifstream input;
 	input.open(batchConfigFile, ios::in);
 	if(!input){
 		cerr << "Error reading batch config" << endl;
 		exit(EXIT_FAILURE);
 	}
-	json batch = json::parse(input);
+	json batch;
+	try{
+		batch = json::parse(input);
+	}catch(const nlohmann::detail::parse_error&){
+		cerr << "Invalid json in batch config: " << batchConfigFile << endl;
+		exit(EXIT_FAILURE);
+	}
 	input.close();
 	
 	//TODO make template certificate_t
@@ -51,6 +57,7 @@ int main(int argc,const char** argv){
                        (std::istreambuf_iterator<char>()) );
 	input.close();
 	
+	//TODO Create a better syntax for replacing / find something common online
 	//Make simple changes
 	replace(templateCertificateContent,"|||signee|||",batch["signee"]);
 	
@@ -93,10 +100,7 @@ int main(int argc,const char** argv){
 		output << cert.content;
 		output.close();
 	}
-	
-	//cout << templatefile << " | " << templatefile.length() << endl;
-	
-	//cout << batch["people"][0]["name"] << endl;
+
 }
 
 //Function to replace string in string
@@ -204,8 +208,15 @@ void loadConfigFile(const string& filename){
 		cerr << "Error opening config file: " << filename << endl;
 		exit(EXIT_FAILURE);
 	}
-	json config = json::parse(input);
+	json config;
+	try{
+		config = json::parse(input);
+	}catch(const nlohmann::detail::parse_error&){
+		cerr << "Invalid json in config: " << filename << endl;
+		exit(EXIT_FAILURE);
+	}
 	input.close();
+	
 	//TODO catch nlohmann::detail::type_error
 	if(config["outputDirectory"]!=nullptr){
 		outputDirectory = config["outputDirectory"];
