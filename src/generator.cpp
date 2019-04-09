@@ -4,6 +4,7 @@
 #include <iostream>
 #include <sstream>
 #include <vector>
+#include <stdlib.h>
 
 #define DEFAULT_CONFIG "default.json"
 
@@ -25,6 +26,7 @@ struct certificate_t{
 bool replace(string&, const string&, const string&);
 void configure(int, const char**);
 void loadConfigFile(const string&);
+void ensurePath(const string&);
 
 int main(int argc,const char** argv){
 	//Configurate generator
@@ -162,7 +164,7 @@ void configure(int argc, const char** argv){
 		}else if(strcmp(argv[i],"-o")==0){
 			i++;
 			if(i < argc){
-				batchConfigFile = argv[i];
+				outputDirectory = argv[i];
 			}else{
 				cerr << "Expected argument after -o" << endl;
 				exit(EXIT_FAILURE);
@@ -181,6 +183,19 @@ void configure(int argc, const char** argv){
 			exit(EXIT_FAILURE);
 		}
 	}
+	
+	//Correct paths if end / is missing
+	if(outputDirectory.back() != '/'){
+		outputDirectory.append("/");
+	}
+	if(workingDirectory.back() != '/'){
+		workingDirectory.append("/");
+	}
+	cout << outputDirectory << endl;
+	//Ensure the existence of working and output directory
+	//TODO inform user if its not possible to create directories
+	ensurePath(outputDirectory);
+	ensurePath(workingDirectory);
 	
 	//Check if configuration is valid
 	if(templateFile == ""){
@@ -233,4 +248,12 @@ void loadConfigFile(const string& filename){
 	if(config["templateFile"]!=nullptr){
 		templateFile = config["templateFile"];
 	}
+}
+
+//Ensure that a path exists
+void ensurePath(const string& path){
+	//TODO find a better solution without shell
+	string command = "mkdir -p -m=750 ";
+	command.append(path);
+	system(command.c_str());
 }
