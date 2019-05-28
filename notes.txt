@@ -1,6 +1,0 @@
-goals
-input:
-1: latex template
-2: vorname, nachname, datum, leistungen als JSON
-output:
-.tex datei
