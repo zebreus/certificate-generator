@@ -1,7 +1,4 @@
-﻿# Project: Rezeptbuch
-# Aufruf make -f makefile.mak Parameter
-
-CPP  = g++
+﻿CPP  = g++
 BIN  = certificate-generator
 CFLAGS = $(INCS) -O0 -std=gnu++11
 RM = rm -rf
