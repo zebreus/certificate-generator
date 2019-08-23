@@ -29,10 +29,12 @@ void Batch::generateCertificates(){
 }
 
 
-void Batch::outputCertificates() const{
+void Batch::outputCertificates(){
 	//TODO Zeit messen und wenn nötig Multithreading und WorkingDirectory im Arbeitsspeicher erstellen
+	outputFiles.clear();
 	for(Certificate certificate : certificates){
-		certificate.generatePDF(workingDirectory,outputDirectory);
+		string path = certificate.generatePDF(workingDirectory,outputDirectory);
+		outputFiles.push_back(path);
 	}
 }
 
@@ -88,4 +90,8 @@ Batch::Batch(json batchConfiguration){
 		output.close();
 		input.close();
 	}
+}
+
+vector<string> Batch::getOutputFiles() const{
+	return outputFiles;
 }

@@ -3,10 +3,14 @@
 
 #include <nlohmann/json.hpp>
 #include <string>
+#include <sstream>
 #include <iostream>
 #include <vector>
 #include "Certificate.hpp"
 #include "Student.hpp"
+#include "thrift/CertificateGenerator_types.h"
+
+using namespace  ::CertificateGeneratorThrift;
 
 using json = nlohmann::json;
 using namespace std;

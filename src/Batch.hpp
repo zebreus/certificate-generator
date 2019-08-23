@@ -9,6 +9,9 @@
 #include "Student.hpp"
 #include "TemplateCertificate.hpp"
 #include "Certificate.hpp"
+#include "thrift/CertificateGenerator_types.h"
+
+using namespace  ::CertificateGeneratorThrift;
 
 using json = nlohmann::json;
 using namespace std;
@@ -31,10 +34,11 @@ private:
 	vector<Student> students;
 	vector<TemplateCertificate> templateCertificates;
 	vector<Certificate> certificates;
+	vector<string> outputFiles;
 	string workingDirectory;
 	string outputDirectory;
 	void generateCertificates();
-	void outputCertificates() const;
+	void outputCertificates();
 
 public:
 	/** @brief Constructor that creates a Batch
@@ -71,6 +75,13 @@ public:
     * compile them to PDFs in the output folder.
     */
 	void executeBatch();
+	
+	/** @brief This method returns the locations of the generated PDF files
+    * @return vector<string> containing strings with the path of every output PDF
+    * This method returns the locations of the generated PDF files.
+    * 
+    */
+	vector<string> getOutputFiles() const;
 };
 
 #endif

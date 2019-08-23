@@ -14,7 +14,7 @@ const string Certificate::getContent() const{
 	return content ;
 }
 
-void Certificate::generatePDF(const string& workingDirectory,const string& outputDirectory) const{
+string Certificate::generatePDF(const string& workingDirectory,const string& outputDirectory) const{
 	//Write .tex into workingDirectory
 	ofstream output;
 	string completePath = workingDirectory;
@@ -78,4 +78,5 @@ void Certificate::generatePDF(const string& workingDirectory,const string& outpu
 		temporaryPdf.close();
 	}
 	
+	return finalPdfPath;
 }

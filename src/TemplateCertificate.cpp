@@ -37,13 +37,21 @@ const Certificate TemplateCertificate::generateCertificate(const Student& studen
 			if(student.getProperties()[substitutionName].is_string()){
 				result.replace(tp.start,tp.stop-tp.start+1,student.getProperties()[substitutionName]);
 			}else{
-				//Fehler
+				InvalidConfiguration error;
+				stringstream errormessage;
+				errormessage << "No property " << substitutionName << " of type string in " << substitutionNamespace;
+				error.message = errormessage.str();
+				throw error;
 			}
 		}else if(substitutionNamespace == "global"){
 			if(globalProperties[substitutionName].is_string()){
 				result.replace(tp.start,tp.stop-tp.start+1,globalProperties[substitutionName]);
 			}else{
-				//Fehler
+				InvalidConfiguration error;
+				stringstream errormessage;
+				errormessage << "No property " << substitutionName << " of type string in " << substitutionNamespace;
+				error.message = errormessage.str();
+				throw error;
 			}
 		}else if(substitutionNamespace == "auto"){
 			if(student.getProperties()[substitutionName].is_string()){
@@ -51,7 +59,11 @@ const Certificate TemplateCertificate::generateCertificate(const Student& studen
 			}else if(globalProperties[substitutionName].is_string()){
 				result.replace(tp.start,tp.stop-tp.start+1,globalProperties[substitutionName]);
 			}else{
-				//Fehler
+				InvalidConfiguration error;
+				stringstream errormessage;
+				errormessage << "No property " << substitutionName << " of type string in any valid namespace";
+				error.message = errormessage.str();
+				throw error;
 			}
 		}
 	}
@@ -72,6 +84,7 @@ string TemplateCertificate::generateName(const Student& student) const{
 	return name;
 }
 
+//TODO tables not only in student
 string TemplateCertificate::replaceOptional(const string& optional, const Student& student) const{
 	string result;
 	json name = student.getProperties()[getOptionalName(optional)];
@@ -83,6 +96,7 @@ string TemplateCertificate::replaceOptional(const string& optional, const Studen
 				string substitution = line.substr(tp.start,tp.stop-tp.start);
 				string substitutionNamespace = getSubstitudeNamespace(substitution);
 				string substitutionName = getSubstitudeName(substitution);
+				//TODO detect also "table" as a valid namespace and throw a error if appropriate
 				if(substitutionNamespace == "auto"){
 					if(object[substitutionName].is_string()){
 						line.replace(tp.start, tp.stop-tp.start+1, object[substitutionName]);
@@ -92,7 +106,11 @@ string TemplateCertificate::replaceOptional(const string& optional, const Studen
 			result.append(line);
 		}
 	}else{
-		//Kein array
+		InvalidConfiguration error;
+		stringstream errormessage;
+		errormessage << "No array " << getOptionalName(optional) << " in student";
+		error.message = errormessage.str();
+		throw error;
 	}
 	return result;
 }
