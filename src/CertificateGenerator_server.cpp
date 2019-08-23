@@ -25,7 +25,6 @@ using namespace ::apache::thrift::server;
 using namespace  ::CertificateGeneratorThrift;
 using json = nlohmann::json;
 
-
 class CertificateGeneratorHandler : virtual public CertificateGeneratorIf {
  public:
   CertificateGeneratorHandler() {
@@ -65,14 +64,15 @@ class CertificateGeneratorHandler : virtual public CertificateGeneratorIf {
 
 int main(int argc, char **argv) {
   int port = 9090;
-  ::apache::thrift::stdcxx::shared_ptr<CertificateGeneratorHandler> handler(new CertificateGeneratorHandler());
-  ::apache::thrift::stdcxx::shared_ptr<TProcessor> processor(new CertificateGeneratorProcessor(handler));
-  ::apache::thrift::stdcxx::shared_ptr<TServerTransport> serverTransport(new TServerSocket(port));
-  ::apache::thrift::stdcxx::shared_ptr<TTransportFactory> transportFactory(new TBufferedTransportFactory());
-  ::apache::thrift::stdcxx::shared_ptr<TProtocolFactory> protocolFactory(new TBinaryProtocolFactory());
+  ::std::shared_ptr<CertificateGeneratorHandler> handler(new CertificateGeneratorHandler());
+  ::std::shared_ptr<TProcessor> processor(new CertificateGeneratorProcessor(handler));
+  ::std::shared_ptr<TServerTransport> serverTransport(new TServerSocket(port));
+  ::std::shared_ptr<TTransportFactory> transportFactory(new TBufferedTransportFactory());
+  ::std::shared_ptr<TProtocolFactory> protocolFactory(new TBinaryProtocolFactory());
 
   TSimpleServer server(processor, serverTransport, transportFactory, protocolFactory);
   server.serve();
   return 0;
 }
+
 

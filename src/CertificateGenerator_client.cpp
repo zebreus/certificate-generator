@@ -10,7 +10,7 @@
 #include <thrift/transport/TBufferTransports.h>
 #include <thrift/protocol/TBinaryProtocol.h>
 
-#define BATCH_CONFIGURATION "***REMOVED***resources/containerbatch.json"
+#define BATCH_CONFIGURATION "resources/containerbatch.json"
 
 using namespace apache::thrift;
 using namespace apache::thrift::protocol;
@@ -21,7 +21,7 @@ using namespace std;
 int main(int argc, char **argv) {
 	//Initialize thrift connection
 	std::shared_ptr<TTransport> socket(new TSocket("localhost", 9090));
-	std::shared_ptr<TTransport> transpourt(new TBufferedTransport(socket));
+	std::shared_ptr<TTransport> transport(new TBufferedTransport(socket));
 	std::shared_ptr<TProtocol> protocol(new TBinaryProtocol(transport));
 	CertificateGeneratorClient client(protocol);
 	
