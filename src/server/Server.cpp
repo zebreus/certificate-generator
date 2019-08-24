@@ -11,7 +11,7 @@
 #include "Batch.hpp"
 #include <nlohmann/json.hpp>
 
-#include "thrift/CertificateGenerator.h"
+#include "gen-cpp/CertificateGenerator.h"
 #include <thrift/protocol/TBinaryProtocol.h>
 #include <thrift/server/TSimpleServer.h>
 #include <thrift/transport/TServerSocket.h>

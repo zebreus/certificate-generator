@@ -9,9 +9,6 @@
 #include "Student.hpp"
 #include "TemplateCertificate.hpp"
 #include "Certificate.hpp"
-#include "thrift/CertificateGenerator_types.h"
-
-using namespace  ::CertificateGeneratorThrift;
 
 using json = nlohmann::json;
 using namespace std;

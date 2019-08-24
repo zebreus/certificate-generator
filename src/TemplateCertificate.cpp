@@ -37,21 +37,17 @@ const Certificate TemplateCertificate::generateCertificate(const Student& studen
 			if(student.getProperties()[substitutionName].is_string()){
 				result.replace(tp.start,tp.stop-tp.start+1,student.getProperties()[substitutionName]);
 			}else{
-				InvalidConfiguration error;
 				stringstream errormessage;
 				errormessage << "No property " << substitutionName << " of type string in " << substitutionNamespace;
-				error.message = errormessage.str();
-				throw error;
+				throw InvalidConfigurationError(errormessage.str());
 			}
 		}else if(substitutionNamespace == "global"){
 			if(globalProperties[substitutionName].is_string()){
 				result.replace(tp.start,tp.stop-tp.start+1,globalProperties[substitutionName]);
 			}else{
-				InvalidConfiguration error;
 				stringstream errormessage;
 				errormessage << "No property " << substitutionName << " of type string in " << substitutionNamespace;
-				error.message = errormessage.str();
-				throw error;
+				throw InvalidConfigurationError(errormessage.str());
 			}
 		}else if(substitutionNamespace == "auto"){
 			if(student.getProperties()[substitutionName].is_string()){
@@ -59,11 +55,9 @@ const Certificate TemplateCertificate::generateCertificate(const Student& studen
 			}else if(globalProperties[substitutionName].is_string()){
 				result.replace(tp.start,tp.stop-tp.start+1,globalProperties[substitutionName]);
 			}else{
-				InvalidConfiguration error;
 				stringstream errormessage;
 				errormessage << "No property " << substitutionName << " of type string in any valid namespace";
-				error.message = errormessage.str();
-				throw error;
+				throw InvalidConfigurationError(errormessage.str());
 			}
 		}
 	}
@@ -106,11 +100,9 @@ string TemplateCertificate::replaceOptional(const string& optional, const Studen
 			result.append(line);
 		}
 	}else{
-		InvalidConfiguration error;
 		stringstream errormessage;
 		errormessage << "No array " << getOptionalName(optional) << " in student";
-		error.message = errormessage.str();
-		throw error;
+		throw InvalidConfigurationError(errormessage.str());
 	}
 	return result;
 }

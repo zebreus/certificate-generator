@@ -8,9 +8,7 @@
 #include <vector>
 #include "Certificate.hpp"
 #include "Student.hpp"
-#include "thrift/CertificateGenerator_types.h"
-
-using namespace  ::CertificateGeneratorThrift;
+#include "Exceptions.hpp"
 
 using json = nlohmann::json;
 using namespace std;

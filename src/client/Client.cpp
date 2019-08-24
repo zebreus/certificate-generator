@@ -1,5 +1,5 @@
-#include "thrift/CertificateGenerator.h"
-#include "thrift/CertificateGenerator_types.h"
+#include "gen-cpp/CertificateGenerator.h"
+#include "gen-cpp/CertificateGenerator_types.h"
 
 #include <iostream>
 #include <string>
