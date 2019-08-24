@@ -27,9 +27,12 @@ string Certificate::generatePDF(const string& workingDirectory,const string& out
 	//Generate pdf file
 	//Set names and parameters
 	string command = "xelatex";
-	string workingDirectoryParameter = "-output-directory=";
-	workingDirectoryParameter.append(workingDirectory);
-	string inputFileParameter(completePath);
+	string workingDirectoryParameter = "";
+	//string workingDirectoryParameter = "-output-directory=";
+	//workingDirectoryParameter.append(workingDirectory);
+	//string inputFileParameter(completePath);
+	string inputFileParameter(name);
+	inputFileParameter.append(".tex");
 	//string interactionParameter = "-interaction=batchmode";
 	string interactionParameter = "";
 	//Fork for latex process

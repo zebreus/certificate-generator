@@ -75,6 +75,12 @@ Batch::Batch(json batchConfiguration){
 	workingDirectory = batchConfiguration["workingDirectory"];
 	outputDirectory.append("/");
 	workingDirectory.append("/");
+	try{
+        filesystem::create_directories(workingDirectory);
+        filesystem::create_directories(outputDirectory);
+    }catch (std::exception& e){
+        std::cout << e.what() << std::endl;
+    }
 	
 	//Copy resources to working directory
 	cout << "Copying Resources" << endl;
@@ -90,6 +96,12 @@ Batch::Batch(json batchConfiguration){
 		output.close();
 		input.close();
 	}
+}
+
+Batch::~Batch(){
+	//Remove working directory
+	//TODO Add security measures against deleting something important.
+	//filesystem::remove_all(workingDirectory);
 }
 
 vector<string> Batch::getOutputFiles() const{

@@ -9,6 +9,7 @@
 #include "Student.hpp"
 #include "TemplateCertificate.hpp"
 #include "Certificate.hpp"
+#include <filesystem>
 
 using json = nlohmann::json;
 using namespace std;
@@ -58,6 +59,12 @@ public:
     * and the outputDirectory from the batchConfiguration
     */
 	Batch(json batchConfiguration);
+	
+	/** @brief Destructor that also deletes the working directory
+    *
+    * This method destroys a Batch and deletes the working directory
+    */
+	~Batch();
 	
 	/** @brief This method checks whether the batch is valid
     * @return Boolean that indicates whether the batch is valid
