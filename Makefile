@@ -74,12 +74,15 @@ ifeq ("$(wildcard $(THRIFT_GENERATED))","")
 endif
 
 $(SERVER_EXE): $(SERVER_OBJS) $(MAIN_OBJS) $(THRIFT_OBJS)
+	mkdir -p $(OUTPUT)
 	$(CXX) -o $(OUTPUT)/$@ $^ $(SERVER_LDFLAGS)
 	
 $(CLIENT_EXE): $(CLIENT_OBJS) $(MAIN_OBJS) $(THRIFT_OBJS)
+	mkdir -p $(OUTPUT)
 	$(CXX) -o $(OUTPUT)/$@ $^ $(CLIENT_LDFLAGS)
 	
 $(LOCAL_EXE): $(LOCAL_OBJS) $(MAIN_OBJS)
+	mkdir -p $(OUTPUT)
 	$(CXX) -o $(OUTPUT)/$@ $^ $(LOCAL_LDFLAGS)
 
 clean:
