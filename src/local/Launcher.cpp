@@ -21,9 +21,15 @@ int main(int argc, char** argv){
 	
 	//Parse options
 	string batchConfigurationFile;
+	string outputFile;
+	bool verbose = false;
 	try{
 		cxxopts::Options options(argv[0], " - example command line options");
-		options.add_options()("c,configuration", "A configuration file", cxxopts::value<string>(), "FILE")("h, help", "Print help");
+		options.add_options()
+			("c,configuration", "A configuration file", cxxopts::value<string>(), "FILE")
+			("o,output", "Output PDF filename", cxxopts::value<string>()->default_value("certificate.pdf"))
+			("v,verbose", "Enable output", cxxopts::value<bool>(verbose))
+			("h, help", "Print help");
 		auto result = options.parse(argc, argv);
 		if (result.count("help") || result.arguments().size()==0){
 			cout << options.help({""}) << std::endl;
@@ -31,13 +37,30 @@ int main(int argc, char** argv){
 		}
 		if (result.count("configuration")){
 			batchConfigurationFile = result["c"].as<string>();
+		}else{
+			throw cxxopts::OptionException("No configuration file specified");
 		}
+		outputFile = result["output"].as<string>();
 	}catch (const cxxopts::OptionException& e){
-		cout << "error parsing options: " << e.what() << endl;
+		cout << "Error parsing options: " << e.what() << endl;
 		exit(1);
 	}
 
+	//Disable cout
+	if(!verbose){
+		cout.rdbuf(NULL);
+	}
+	
+	//Check if the output file is valid
+	ofstream checkOutput(outputFile, ios::out | ios::binary );
+	if(!checkOutput){
+		cerr << "Error opening output file" << endl;
+		exit(EXIT_FAILURE);
+	}
+	checkOutput.close();
+	
 	//Load batch configuration
+	std::cout << "Loading configuration file" << std::endl;
 	ifstream input;
 	input.open(batchConfigurationFile, ios::in);
 	if(!input){
