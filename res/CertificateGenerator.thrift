@@ -2,6 +2,11 @@
 
 namespace cpp CertificateGeneratorThrift
 
+struct GeneratedFile {
+    1: required string name;
+    2: required binary content;
+}
+
 exception InvalidConfiguration {
 1: string message,
 }
@@ -15,5 +20,5 @@ exception UnableToWriteFile {
 }
 
 service CertificateGenerator {
-  string generateCertificate(1:string configuration ),
+  list<GeneratedFile> generateCertificates(1:string configuration),
 }

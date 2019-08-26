@@ -7,6 +7,7 @@
 #include <string>
 #include <sstream>
 #include <fstream>
+#include <filesystem>
 
 #include <thrift/transport/TSocket.h>
 #include <thrift/transport/TBufferTransports.h>
@@ -22,7 +23,7 @@ int main(int argc, char **argv) {
 	
 	//Parse options
 	string batchConfigurationFile;
-	string outputFile;
+	string outputDirectory;
 	string serverAddress;
 	int serverPort;
 	bool verbose = false;
@@ -32,7 +33,7 @@ int main(int argc, char **argv) {
 			("c,configuration", "A configuration file", cxxopts::value<string>(), "FILE")
 			("h,host", "The generator server host", cxxopts::value<string>())
 			("p,port", "The generator server port", cxxopts::value<int>())
-			("o,output", "Output PDF filename", cxxopts::value<string>()->default_value("certificate.pdf"))
+			("o,output", "Output PDF directory", cxxopts::value<string>()->default_value("./"))
 			("v,verbose", "Enable output", cxxopts::value<bool>(verbose))
 			("help", "Print help");
 		auto result = options.parse(argc, argv);
@@ -45,7 +46,7 @@ int main(int argc, char **argv) {
 		}else{
 			throw cxxopts::OptionException("No configuration file specified");
 		}
-		outputFile = result["output"].as<string>();
+		outputDirectory = result["output"].as<string>();
 		if (result.count("host")){
 			serverAddress = result["host"].as<string>();
 		}else{
@@ -61,7 +62,7 @@ int main(int argc, char **argv) {
 		}
 	}catch (const cxxopts::OptionException& e){
 		cerr << "Error parsing options: " << e.what() << endl;
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 
 	//Disable cout
@@ -69,14 +70,13 @@ int main(int argc, char **argv) {
 		cout.rdbuf(NULL);
 	}
 	
-	//Check if the output file is valid
-	ofstream checkOutput(outputFile, ios::out | ios::binary );
-	if(!checkOutput){
-		cerr << "Error opening output file" << endl;
+	//Ensure that the output directory is valid
+	try{
+		filesystem::create_directories(outputDirectory);
+	}catch(const filesystem::filesystem_error& e){
+		cerr << "Error creating output directory: " << e.what() << endl;
 		exit(EXIT_FAILURE);
 	}
-	checkOutput.close();
-	
 	//Load configuration file
 	std::cout << "Loading configuration file" << std::endl;
 	stringstream file;
@@ -99,24 +99,27 @@ int main(int argc, char **argv) {
 	std::cout << "Connecting to server " << serverAddress << ":" << serverPort << std::endl;
 	transport->open();
 
-	//Generate certificate
+	//Generate certificates
 	std::cout << "Generating certificate" << std::endl;
-	std::string response;
-	client.generateCertificate(response, file.str());
+	std::vector<GeneratedFile> response;
+	client.generateCertificates(response, file.str());
 	
 	//Close thrift connection
 	transport->close();
 	
-	//Write file to disk
-	std::cout << "Saving certificate to file " << outputFile << std::endl;
-	ofstream output(outputFile, ios::out | ios::binary );
-	if(!output){
-		cerr << "Error opening output file" << endl;
-		exit(EXIT_FAILURE);
+	//Write files to disk
+	for(GeneratedFile file : response){
+		string outputFile = outputDirectory;
+		outputFile.append("/").append(file.name);
+		std::cout << "Saving certificate to file " << outputFile << std::endl;
+		ofstream output(outputFile, ios::out | ios::binary );
+		if(!output){
+			cerr << "Error opening output file" << endl;
+			exit(EXIT_FAILURE);
+		}
+		output << file.content;
+		output.close();
 	}
-	output << response;
-	output.close();
-	
 	cout << "All done" << endl;
 	return 0;
 }

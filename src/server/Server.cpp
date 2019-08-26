@@ -5,6 +5,7 @@
 #include <sstream>
 #include <iostream>
 #include <fstream>
+#include <filesystem>
 #include "Student.hpp"
 #include "TemplateCertificate.hpp"
 #include "Certificate.hpp"
@@ -24,22 +25,21 @@ using namespace ::apache::thrift::transport;
 using namespace ::apache::thrift::server;
 
 using namespace  ::CertificateGeneratorThrift;
-using json = nlohmann::json;
 
 json baseConfiguration;
 
 class CertificateGeneratorHandler : virtual public CertificateGeneratorIf {
-public:
-	CertificateGeneratorHandler() {
-		// Your initialization goes here
-	}
+ public:
+  CertificateGeneratorHandler() {
+    // Your initialization goes here
+  }
 
-	void generateCertificate(std::string& _return, const std::string& n1) {
-		
+  void generateCertificates(std::vector<GeneratedFile> & _return, const std::string& configuration) {
+
 		//Parse received configuration
 		json batchConfiguration;
 		try{
-			batchConfiguration = json::parse(n1);
+			batchConfiguration = json::parse(configuration);
 		}catch(const nlohmann::detail::parse_error& error){
 			InvalidConfiguration thriftError;
 			thriftError.message = error.what();
@@ -73,19 +73,27 @@ public:
 		batch.executeBatch();
 		std::cout << "All done" << std::endl;
 		
-		//Returning result
+		//Returning results
 		std::cout << "Returning result" << std::endl;
-		stringstream content;
-		ifstream pdfFile(batch.getOutputFiles()[0] , ios::in | ios::binary);
-		if(!pdfFile){
-			InvalidConfiguration thriftError;
-			thriftError.message = "Failed to open output file";
-			throw thriftError;
+		vector<GeneratedFile> generatedFiles;
+		for(string outputFile : batch.getOutputFiles() ){
+			GeneratedFile file;
+			file.name = filesystem::path(outputFile).filename();
+			stringstream content;
+			ifstream pdfFile(outputFile, ios::in | ios::binary);
+			if(!pdfFile){
+				InvalidConfiguration thriftError;
+				thriftError.message = "Failed to open output file";
+				throw thriftError;
+			}
+			content << pdfFile.rdbuf();
+			pdfFile.close();
+			file.content = content.str();
+			generatedFiles.push_back(file);
 		}
-		content << pdfFile.rdbuf();
-		pdfFile.close();
-		_return = content.str();
-	}
+		_return = generatedFiles;
+  }
+
 };
 
 int main(int argc, char **argv) {
@@ -141,7 +149,6 @@ int main(int argc, char **argv) {
 		cerr << "Error reading base configuration file" << endl;
 		exit(EXIT_FAILURE);
 	}
-	baseConfiguration;
 	try{
 		baseConfiguration = json::parse(input);
 	}catch(const nlohmann::detail::parse_error& error){
