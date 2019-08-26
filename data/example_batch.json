@@ -1,0 +1,47 @@
+{
+"students":[
+	{
+	"name":"Max",
+	"surname":"Mustermann",
+	"date":"14. August 1998",
+	"tasks":[
+		{
+		"name":"showing up",
+		"grade":"2.3"
+		},
+		{
+		"name":"breathing",
+		"grade":"2.7"
+		}
+	]
+	},
+	{
+	"name":"Tim",
+	"surname":"Testperson",
+	"date":"8. April 2019",
+	"tasks":[
+		{
+		"name":"showing up",
+		"grade":"1.0"
+		},
+		{
+		"name":"not dying",
+		"grade":"1.0"
+		},
+		{
+		"name":"breathing",
+		"grade":"1.0"
+		}
+	]
+	}
+],
+"tester":"Someone Important",
+"templates":[
+	"data/example_template.tex"
+],
+"resources":[
+	"data/certificate-generator.sty"
+],
+"outputDirectory":"output/",
+"workingDirectory":"working/"
+}

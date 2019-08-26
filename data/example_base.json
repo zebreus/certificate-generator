@@ -1,0 +1,10 @@
+{
+"templates":[
+	"data/example_template.tex"
+],
+"resources":[
+	"data/certificate-generator.sty"
+],
+"outputDirectory":"output/",
+"workingDirectory":"working/"
+}

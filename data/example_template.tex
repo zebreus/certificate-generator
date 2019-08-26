@@ -1,0 +1,35 @@
+\documentclass[a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[german]{babel}
+\usepackage{amsmath}
+\usepackage{certificate-generator}
+\usepackage{ifthen}
+
+\title{Certificate of Existence}
+\author{\substitude{name}}
+\date{\substitude{date}}
+\begin{document}
+
+\maketitle
+\section{Certificate}
+
+\subsection{Text}
+\substitude[student]{name} \substitude{surname} you are a great person and on \substitude{date} you have proven your existence by completing the following tasks:
+
+\subsection{Tasks}
+\begin{tabular}{ l | c }
+\hline
+Task & Rating \\ \hline
+\optional{tasks}{
+\substitude{name} & \substitude{grade} \\ \hline
+}
+\end{tabular}
+
+\subsection{Tester}
+Certified by \substitude{tester}
+
+\end{document}
+
