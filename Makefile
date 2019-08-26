@@ -96,3 +96,6 @@ thrift:
 	
 doku: 
 	- doxygen Doxyfile
+
+docker:
+	docker build --tag=certgen .
