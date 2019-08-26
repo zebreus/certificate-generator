@@ -65,25 +65,26 @@ $(CLIENT_OBJS): %.o : %.cpp
 $(LOCAL_OBJS): %.o : %.cpp
 	$(CPP) $(CPPFLAGS) $(LOCAL_CPP) -c -o $@ $<
 	
-$(THRIFT_OBJS): %.o : ensurethrift %.cpp
-	$(CPP) $(CPPFLAGS) $(THRIFT_CPP) -c -o $@ $(word 2,$^)
+$(THRIFT_OBJS): %.o : %.cpp
+	$(CPP) $(CPPFLAGS) $(THRIFT_CPP) -c -o $@ $<
 
-ensurethrift:
-ifeq ("$(wildcard $(THRIFT_GENERATED))","")
-	make thrift
-endif
+$(SERVER_EXE): $(OUTPUT)/$(SERVER_EXE)
 
-$(SERVER_EXE): $(SERVER_OBJS) $(MAIN_OBJS) $(THRIFT_OBJS)
+$(CLIENT_EXE): $(OUTPUT)/$(CLIENT_EXE)
+
+$(LOCAL_EXE): $(OUTPUT)/$(LOCAL_EXE)
+
+$(OUTPUT)/$(SERVER_EXE): $(SERVER_OBJS) $(MAIN_OBJS) $(THRIFT_OBJS)
 	mkdir -p $(OUTPUT)
-	$(CXX) -o $(OUTPUT)/$@ $^ $(SERVER_LDFLAGS)
+	$(CXX) -o $@ $^ $(SERVER_LDFLAGS)
 	
-$(CLIENT_EXE): $(CLIENT_OBJS) $(MAIN_OBJS) $(THRIFT_OBJS)
+$(OUTPUT)/$(CLIENT_EXE): $(CLIENT_OBJS) $(MAIN_OBJS) $(THRIFT_OBJS)
 	mkdir -p $(OUTPUT)
-	$(CXX) -o $(OUTPUT)/$@ $^ $(CLIENT_LDFLAGS)
+	$(CXX) -o $@ $^ $(CLIENT_LDFLAGS)
 	
-$(LOCAL_EXE): $(LOCAL_OBJS) $(MAIN_OBJS)
+$(OUTPUT)/$(LOCAL_EXE): $(LOCAL_OBJS) $(MAIN_OBJS)
 	mkdir -p $(OUTPUT)
-	$(CXX) -o $(OUTPUT)/$@ $^ $(LOCAL_LDFLAGS)
+	$(CXX) -o $@ $^ $(LOCAL_LDFLAGS)
 
 clean:
 	rm -f $(LOCAL_OBJS) $(MAIN_OBJS) $(SERVER_OBJS) $(CLIENT_OBJS) $(THRIFT_OBJS)
