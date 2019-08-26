@@ -1,22 +1,29 @@
 FROM archlinux/base
 MAINTAINER Lennart E.
 
-#update db and improve mirrorlist
-RUN pacman -Sy && pacman -S --noconfirm reflector && reflector --latest 200 --sort rate --save /etc/pacman.d/mirrorlist && pacman -Sy
+#get reflector for fastest mirror
+RUN pacman -Sy && pacman -S --noconfirm reflector
 
 #get latex, thrift and boost(for thrift)
-RUN pacman -S --noconfirm texlive-core thrift boost
+RUN reflector --latest 10 --sort rate --save /etc/pacman.d/mirrorlist && pacman -Sy && pacman -S --noconfirm texlive-core thrift boost
 
 #get build tools
-RUN pacman -S --noconfirm base-devel
+RUN reflector --latest 10 --sort rate --save /etc/pacman.d/mirrorlist && pacman -Sy && pacman -S --noconfirm base-devel
 
-#install certificate generator
+#remove reflector
+RUN pacman -Rns --noconfirm reflector
+
+#build certificate generator
 COPY ./ /certgen/
 RUN make -C /certgen/ thrift && make -C /certgen/ server
 
-EXPOSE 9090
+#remove build tools
+#RUN pacman -Rns --noconfirm base-devel
+
+ENV PORT 9090
+ENV CONFIGURATION_FILE /certgen/data/example_base.json
 WORKDIR /certgen/
-CMD /certgen/out/server
+CMD /certgen/out/server -c $CONFIGURATION_FILE -p $PORT $([[ ! -z "$VERBOSE" ]] && echo -v)
 
 #install build tools
 #RUN pacman -S --noconfirm base-devel git sudo
