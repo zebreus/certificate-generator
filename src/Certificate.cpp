@@ -27,14 +27,10 @@ string Certificate::generatePDF(const string& workingDirectory,const string& out
 	//Generate pdf file
 	//Set names and parameters
 	string command = "xelatex";
-	string workingDirectoryParameter = "";
-	//string workingDirectoryParameter = "-output-directory=";
-	//workingDirectoryParameter.append(workingDirectory);
-	//string inputFileParameter(completePath);
+	string haltOnErrorParameter = "-halt-on-error";
 	string inputFileParameter(name);
 	inputFileParameter.append(".tex");
-	//string interactionParameter = "-interaction=batchmode";
-	string interactionParameter = "";
+	string interactionParameter = "-interaction=batchmode";
 	//Fork for latex process
 	int childPid;
 	if ((childPid = vfork()) == -1) {
@@ -46,12 +42,13 @@ string Certificate::generatePDF(const string& workingDirectory,const string& out
 		//TODO Find out if this also changes the working directory for the parent
 		chdir(workingDirectory.c_str());
 		//Execute latex in child process
-		execlp(command.c_str(), command.c_str(), workingDirectoryParameter.c_str(), interactionParameter.c_str(), inputFileParameter.c_str(), NULL);
+		execlp(command.c_str(), command.c_str(), haltOnErrorParameter.c_str(), interactionParameter.c_str(), inputFileParameter.c_str(), NULL);
 		//Error, exec returned
 		cerr << "Error: xelatex not found" << endl;
 		exit(EXIT_FAILURE);
 	} else {
 		//wait for latex to finish
+		//TODO timeout
 		int status;
 		waitpid(childPid, &status, 0);
 		//Check if latex was successful
