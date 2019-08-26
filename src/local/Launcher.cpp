@@ -24,7 +24,7 @@ int main(int argc, char** argv){
 	string outputFile;
 	bool verbose = false;
 	try{
-		cxxopts::Options options(argv[0], " - example command line options");
+		cxxopts::Options options(argv[0], "Certificate generator");
 		options.add_options()
 			("c,configuration", "A configuration file", cxxopts::value<string>(), "FILE")
 			("o,output", "Output PDF filename", cxxopts::value<string>()->default_value("certificate.pdf"))
@@ -83,9 +83,9 @@ int main(int argc, char** argv){
 	//Check batch
 	cout << "Checking Batch" << endl;
 	if(batch.check()){
-		cout << "OK" << endl;
+		cout << "Check succeeded" << endl;
 	}else{
-		cout << "Check failed" << endl;
+		cerr << "Check failed" << endl;
 		exit(EXIT_FAILURE);
 	}
 	

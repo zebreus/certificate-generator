@@ -27,7 +27,7 @@ int main(int argc, char **argv) {
 	int serverPort;
 	bool verbose = false;
 	try{
-		cxxopts::Options options(argv[0], " - example command line options");
+		cxxopts::Options options(argv[0], "Certificate generator client");
 		options.add_options()
 			("c,configuration", "A configuration file", cxxopts::value<string>(), "FILE")
 			("h,host", "The generator server host", cxxopts::value<string>())
@@ -60,10 +60,10 @@ int main(int argc, char **argv) {
 			throw cxxopts::OptionException("No port specified");
 		}
 	}catch (const cxxopts::OptionException& e){
-		cerr << "error parsing options: " << e.what() << endl;
+		cerr << "Error parsing options: " << e.what() << endl;
 		exit(1);
 	}
-	
+
 	//Disable cout
 	if(!verbose){
 		cout.rdbuf(NULL);
@@ -72,7 +72,7 @@ int main(int argc, char **argv) {
 	//Check if the output file is valid
 	ofstream checkOutput(outputFile, ios::out | ios::binary );
 	if(!checkOutput){
-		cerr << "error opening output file" << endl;
+		cerr << "Error opening output file" << endl;
 		exit(EXIT_FAILURE);
 	}
 	checkOutput.close();
@@ -83,7 +83,7 @@ int main(int argc, char **argv) {
 	ifstream input;
 	input.open(batchConfigurationFile, ios::in);
 	if(!input){
-		cerr << "error opening configuration file" << endl;
+		cerr << "Error opening configuration file" << endl;
 		exit(EXIT_FAILURE);
 	}
 	file << input.rdbuf();
@@ -111,7 +111,7 @@ int main(int argc, char **argv) {
 	std::cout << "Saving certificate to file " << outputFile << std::endl;
 	ofstream output(outputFile, ios::out | ios::binary );
 	if(!output){
-		cerr << "error opening output file" << endl;
+		cerr << "Error opening output file" << endl;
 		exit(EXIT_FAILURE);
 	}
 	output << response;
