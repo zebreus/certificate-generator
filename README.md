@@ -1,105 +1,100 @@
 # certificate-generator
-Generates certificates from templates
+Generates certificates from templates.
 
-Usage:
--t template.tex : Specify template file
--b batchfile.json : Specify batch config file
--c configfile.json : Specify config file
--o outputdirectory : Specify output directory
--w workingdirectory : Specify working directory
--v : verbose
--h : help
+## Building the project
+
+### Server
+#### Docker
+The easiest way to get the server is to run `make docker` to build a docker container containing the server. After building you can start the server with `docker run -p 9090:9090 certgen`.
+#### Executable
+The server executable depends on thrift, boost and a local installation of texlive.
+To build the server executable run `make server`. The executable will be build as `out/server`.
+
+### Client
+The server executable depends on thrift and boost.
+To build the server executable run `make client`. The executable will be build as `out/client`.
+
+### Local installation
+The local executable depends on a local installation of texlive.
+To build the executable run `make local`. The executable will be build as `out/local`.
 
 
-dependencies:
-nlohmann-json
-
-substitution syntax:
-globaler wert: <sub name="NAME_DES_GLOBALEN_WERTS" type="global"/>
-lokaler wert: <sub name="NAME_DES_LOKALEN_WERTS" type="local" />
-tabelle:	<table name="NAME_DER_TABELLE">Hier können auch tabellenwerte verwendet werden.</table>
-tabellenwert: <sub name="NAME_DES_TABELLENWERTS" type="TABELLENNAME" />
-
-ZU BESPRECHEN:
--syntax entscheiden
--struktur besprechen
-
-TODO:
--globale eigenschaften konzeptionieren
--globale eigenschaften implementieren
--namen bestimmen
--parser fertig implementieren
--pdflatex ausführung verbessern
--template schreiben
--code strukturieren
--erweitern
--schriftart
-
-HOW TO WRITE BATCHCONFIGURATION FILES
+## Writing configuration files
 The batch configuration files are json files.
-The base object contains an array of students, an array of templates, an array of resources and strings for global variables and some properties for configuration
+The base object contains an array of students, an array of templates, an array of resources and strings for global variables and some properties for configuration.
 
-students:
+### Students
 Here you specify the values for substitution.
 Each object in this array will be used with every template file to generate a pdf document.
-An array of objects, containing properties for each string that should be replaced and an array of objects for each table
-example: Two students
-"students":[
-	{
-		"name":"max",
-		"age":"30"
-	},
-	{
-		"name":"simon",
-		"age":"17"
-	}
-]
-example: a student with a table containing two entries
-"students":[
-	{
-		"name":"max",
-		"cats":[
-			{
-				"name":"cat1",
-				"age":"3"
-			},
-			{
-				"name":"cat2",
-				"age":"5"
-			}
-		]
-	}
-]
+An array of objects, containing properties for each string that should be replaced and an array of objects for each optional or table.
+#### Examples:
+Two students
 
-templates:
+    "students":[
+    	{
+    		"name":"max",
+    		"age":"30"
+    	},
+    	{
+    		"name":"simon",
+    		"age":"17"
+    	}
+    ]
+A student with a optional containing two entries
+
+    "students":[
+    	{
+    		"name":"max",
+    		"cats":[
+    			{
+    				"name":"cat1",
+    				"age":"3"
+    			},
+    			{
+    				"name":"cat2",
+    				"age":"5"
+    			}
+    		]
+    	}
+    ]
+
+### Templates
 Here you specify the template files.
 An array of strings
-example:
-"templates":[
-	"./template1.tex",
-	"/path/to/template2.tex"
-]
+#### Example:
 
-templates:
+    "templates":[
+    	"./template1.tex",
+    	"/path/to/template2.tex"
+    ]
+
+### Resources
 Here you specify which resources are needed to compile the template files.
 They will be copied into the directory where latex is executed
 An array of strings
-example:
-"resources":[
-	"./path/font.ttf",
-	"/path/to/image.png"
-]
+#### Example:
 
-global variables:
+    "resources":[
+    	"./path/font.ttf",
+    	"/path/to/image.png"
+    ]
+
+### Global variables:
 Global variables are used for substitutions that are independent from the students.
 All properties of the base object, that are not used for configuration are global variables
-example:
-"date":"7.12.2019"
+#### Example:
 
-configuration variables:
+    "date":"1.1.2019",
+    "template_author":"Simon"
+
+### Configuration variables:
 outputDirectory: string, Specifies, where the pdfs should be put
-workingDirectory: string, This directory will be used to put some files. //TODO If not specified one will be created on /tmp
-verbose: true or false, if true more output produced
+workingDirectory: string, This directory will be used to put some files.
+
+#### Examples
+
+    "outputDirectory":"./output",
+    "workingDirectory":"./working"
 
 These properties are required:
 students, templates, outputDirectory
@@ -107,61 +102,94 @@ students, templates, outputDirectory
 See demobatch.json for a complete example
 
 
-HOW TO WRITE TEMPLATE FILES
-short version:
-substitution: <sub name="NAME_OF_VALUE" type="global|local||NAME_OF_A_TABLE"/>
-table:	<table name="NAME_DER_TABELLE">CONTENT</table>
+## Writing template files
+A template file is just a normal .tex file with the special commands listed below. Those commands will be replaced with the appropriate values by the certificate-generator. To create templates you should include the certificate-generator package, because it adds placeholders for the commands, so you can compile your tex file.
 
-long version:
-To use substitutions in your tex files insert a sub tag.
-The name property in the sub tag specifies the name of the field the value will be taken from
-The type property specifies where the value will be taken from
-Options for type are:
-global : the value will be taken from the first level of your configuration.
-local : the value will be taken from the student that is used for the certificate
-If you don't specify a type, local will be assumed
-NAME_OF_A_TABLE : the value will be taken from the table with the given name. Only valid inside a matching table tag
+### Commands:
+#### substitution: 
+\substitude gets replace by a value with the same name from the configuration file. You can define where to look for the value, by setting the first option to auto, global, student or the name of an optional. If you do not set it, or set it to auto, the value will be searched everywhere. If multiple entrys of the same name exist, auto will first search in the optional it is currently in, then the student entries and last the global entries.
 
-To generate arrays use the table tag as seen in Example 3.
+    \substitude{name_of_value}
+    \substitude[auto|student|global|name_of_optional]{name_of_value}
+    
+#### optional:
+\optional defines a section that will be inserted 0 or more times, depending on the number of entries in the array with the optional name in the current student.
+ `\optional{name_of_optional}{content}`
 
+### Examples:
+For the following examples this configuration will be used:
 
-Examples:
-For the following examples this student will be used:
-{
-"name":"Max",
-"surname":"Mustermann",
-"date":"8.4.2019",
-"achievements":[
-	{
-	"name":"example",
-	"grade":"A"
-	},
-	{
-	"name":"another example",
-	"grade":"D"
-	}
-]
-}
+    {
+    "students":[
+    	{
+    	"name":"Max",
+    	"surname":"Mustermann",
+    	"date":"14. August 1998",
+    	"tasks":[
+    		{
+    		"name":"showing up",
+    		"grade":"2.3"
+    		},
+    		{
+    		"name":"breathing",
+    		"grade":"2.7"
+    		}
+    	]
+    	}
+    ],
+    "name":"Manfred"
+    }
 
-Example 1:
+#### Example 1:
 Input:
-<sub name="surname" type="local" /> <sub name="name" type="local" />
-Output:
-Mustermann Max
 
-Example 2:
+    \substitude{name} \substitude[student]{surname} \substitude[global]{name}
+
+Output:
+
+    Max Mustermann Manfred
+
+#### Example 2:
 Input:
-<sub name="name"/> <sub name="surname"/> graduated on <sub name="date" />
-Output:
-Max Mustermann graduated on 8.4.2019
 
-Example 3:
+    \optional{tasks}{ \substitude[student]{name} : \substitude{name} \substitude{grade}
+    }
+Output:
+
+    Max : showing up 2.3
+    Max : breathing 2.7
+
+#### Example 3:
 Input:
-<table name="achievements"><sub name="name"/> achieved grade <sub name="grade" type="achievements"/> in <sub name="name" type="achievements"/> | </table>
-Output:
-Max achieved grade A in example | Max achieved grade D in another example |
 
-What is not allowed:
-tables must not be named "local" "global" or "table"
-no property is allowed to contain the symbols '"' '<' '>' and '/'
-you must not use wrong syntax, lol
+    \substitude{name} \substitude{surname} on \substitude{date} you have completed these tasks:
+    \begin{tabular}{ l | c }
+    \hline
+    Task & Rating \\ \hline
+    \optional{tasks}{
+    \substitude{name} & \substitude{grade} \\ \hline
+    }
+    \end{tabular}
+    Certified by \substitude[global]{name}
+
+Output:
+
+    Max Mustermann on 14. August 1998 you have completed these tasks:
+    \begin{tabular}{ l | c }
+    \hline
+    Task & Rating \\ \hline
+    showing up & 2.3 \\ \hline
+    breathing & 2.7 \\ \hline
+    \end{tabular}
+    Certified by Manfred
+
+### What you can't do:
+ - Naming optionals "local" "global" or "optional"
+ - Have entrynames containint the symbols '"' '<' '>' and '/'
+ - Use wrong syntax
+ - Rely on this list to be complete
+
+
+
+
+
