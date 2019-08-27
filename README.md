@@ -8,11 +8,11 @@ Generates certificates from templates.
 The easiest way to get the server is to run `make docker` to build a docker container containing the server. After building you can start the server with `docker run -p 9090:9090 certgen`.
 #### Executable
 The server executable depends on thrift, boost and a local installation of texlive.
-To build the server executable run `make server`. The executable will be build as `out/server`.
+To build the server executable run `make thrift` and `make server`. The executable will be build as `out/server`.
 
 ### Client
 The server executable depends on thrift and boost.
-To build the server executable run `make client`. The executable will be build as `out/client`.
+To build the server executable run `make thrift` and `make client`. The executable will be build as `out/client`.
 
 ### Local installation
 The local executable depends on a local installation of texlive.
