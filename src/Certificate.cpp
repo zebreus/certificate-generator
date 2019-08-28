@@ -11,7 +11,7 @@ const string Certificate::getName() const{
 
 
 const string Certificate::getContent() const{
-	return content ;
+	return content;
 }
 
 string Certificate::generatePDF(const string& workingDirectory,const string& outputDirectory) const{
@@ -21,6 +21,11 @@ string Certificate::generatePDF(const string& workingDirectory,const string& out
 	completePath.append(name);
 	completePath.append(".tex");
 	output.open(completePath, ios::out);
+	if(!output){
+		stringstream message;
+		message << "Error while writing configured .tex file " << completePath;
+		throw FileAccessError(message.str());
+	}
 	output << content;
 	output.close();
 	
@@ -35,17 +40,18 @@ string Certificate::generatePDF(const string& workingDirectory,const string& out
 	int childPid;
 	if ((childPid = vfork()) == -1) {
 		//Error, fork failed
-		cerr << "ERROR: Not able to fork" << endl;
-		exit(EXIT_FAILURE);
+		stringstream message;
+		message << "Error while forking, vfork() returned childPID -1";
+		throw ForkFailedError(message.str());
 	} else if (childPid == 0) {
 		//Change into workingDirectory
-		//TODO Find out if this also changes the working directory for the parent
 		chdir(workingDirectory.c_str());
 		//Execute latex in child process
 		execlp(command.c_str(), command.c_str(), haltOnErrorParameter.c_str(), interactionParameter.c_str(), inputFileParameter.c_str(), NULL);
 		//Error, exec returned
-		cerr << "Error: xelatex not found" << endl;
-		exit(EXIT_FAILURE);
+		stringstream message;
+		message << "Error while starting " << command << ", probably texlive is not installed or not in path";
+		throw LatexMissingError(message.str());
 	} else {
 		//wait for latex to finish
 		//TODO timeout
@@ -54,8 +60,9 @@ string Certificate::generatePDF(const string& workingDirectory,const string& out
 		//Check if latex was successful
 		if(status != EXIT_SUCCESS){
 			//Error, latex failed
-			cerr << "Error: xelatex exited with status " << status << endl;
-			exit(EXIT_FAILURE);
+			stringstream message;
+			message << "Error while executing " << command << ", it exited with code " << status;
+			throw LatexExecutionError(message.str());
 		}
 	}
 	
@@ -72,7 +79,17 @@ string Certificate::generatePDF(const string& workingDirectory,const string& out
 	//If moving failed, copy files instead
 	if(moveSuccessful != 0){
 		ofstream finalPdf(finalPdfPath, ios::out | ios::binary);
+		if(!finalPdf){
+			stringstream message;
+			message << "Error while opening final pdf file " << finalPdfPath;
+			throw FileAccessError(message.str());
+		}
 		ifstream temporaryPdf(temporaryPdfPath , ios::in | ios::binary);
+		if(!temporaryPdf){
+			stringstream message;
+			message << "Error while opening temporary pdf file " << temporaryPdfPath;
+			throw FileAccessError(message.str());
+		}
 		finalPdf << temporaryPdf.rdbuf();
 		finalPdf.close();
 		temporaryPdf.close();

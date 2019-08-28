@@ -10,6 +10,7 @@
 #include "TemplateCertificate.hpp"
 #include "Certificate.hpp"
 #include <filesystem>
+#include "Exceptions.hpp"
 
 using json = nlohmann::json;
 using namespace std;

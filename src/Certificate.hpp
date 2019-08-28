@@ -2,11 +2,13 @@
 #define CERTIFICATE_HPP
 
 #include <string>
+#include <sstream>
 #include <fstream>
 #include <unistd.h>
 #include <wait.h>
 #include <cstring>
 #include <iostream>
+#include "Exceptions.hpp"
 
 using namespace std;
 
