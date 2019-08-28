@@ -4,8 +4,11 @@
 #include <string>
 #include <sstream>
 #include <iostream>
+#include <sstream>
+#include <iomanip>
 #include <fstream>
 #include <filesystem>
+#include <ctime>
 #include "Student.hpp"
 #include "TemplateCertificate.hpp"
 #include "Certificate.hpp"
@@ -13,9 +16,20 @@
 #include <nlohmann/json.hpp>
 #include <cxxopts.hpp>
 
+#include <thrift/concurrency/ThreadManager.h>
+#include <thrift/protocol/TBinaryProtocol.h>
+#include <thrift/server/TSimpleServer.h>
+#include <thrift/server/TThreadPoolServer.h>
+#include <thrift/server/TThreadedServer.h>
+#include <thrift/transport/TServerSocket.h>
+#include <thrift/transport/TSocket.h>
+#include <thrift/transport/TTransportUtils.h>
+#include <thrift/TToString.h>
+
 #include "gen-cpp/CertificateGenerator.h"
 #include <thrift/protocol/TBinaryProtocol.h>
 #include <thrift/server/TSimpleServer.h>
+#include <thrift/server/TThreadedServer.h>
 #include <thrift/transport/TServerSocket.h>
 #include <thrift/transport/TBufferTransports.h>
 
@@ -27,11 +41,20 @@ using namespace ::apache::thrift::server;
 using namespace  ::CertificateGeneratorThrift;
 
 json baseConfiguration;
+bool keepGeneratedFiles;
 
 class CertificateGeneratorHandler : virtual public CertificateGeneratorIf {
+ private:
+ string id;
+ 
  public:
-  CertificateGeneratorHandler() {
+  CertificateGeneratorHandler(string id): id(id) {
     // Your initialization goes here
+    cout << "Connecting " << id << endl;
+  }
+  
+  ~CertificateGeneratorHandler(){
+	  cout << "Disconnecting " << id << endl;
   }
 
   void generateCertificates(std::vector<GeneratedFile> & _return, const std::string& configuration) {
@@ -49,10 +72,19 @@ class CertificateGeneratorHandler : virtual public CertificateGeneratorIf {
 		
 		//Add base configuration
 		//TODO see if it wouldn't be smarter to use base configuration and just add the students
-		batchConfiguration["outputDirectory"] = baseConfiguration["outputDirectory"];
-		batchConfiguration["workingDirectory"] = baseConfiguration["workingDirectory"];
+		std::stringstream outputDirectory;
+		std::stringstream workingDirectory;
+		outputDirectory << string(baseConfiguration["outputDirectory"].get<std::string>()) << "/" << id << "/";
+		workingDirectory << baseConfiguration["workingDirectory"].get<std::string>() << "/" << id << "/";
+		batchConfiguration["outputDirectory"] = outputDirectory.str();
+		batchConfiguration["workingDirectory"] = workingDirectory.str();
 		batchConfiguration["templates"] = baseConfiguration["templates"];
 		batchConfiguration["resources"] = baseConfiguration["resources"];
+		filesystem::create_directories(workingDirectory.str());
+		filesystem::create_directories(outputDirectory.str());
+		std::cout << "Created output directory " << outputDirectory.str() << std::endl;
+		std::cout << "Created working directory " << workingDirectory.str() << std::endl;
+		
 		
 		//Create batch
 		Batch batch(batchConfiguration);
@@ -91,9 +123,37 @@ class CertificateGeneratorHandler : virtual public CertificateGeneratorIf {
 			file.content = content.str();
 			generatedFiles.push_back(file);
 		}
+		
+		//Removing files
+		std::cout << "Cleaning files" << std::endl;
+		filesystem::remove_all(workingDirectory.str());
+		if(!keepGeneratedFiles){
+			filesystem::remove_all(outputDirectory.str());
+		}
+		
 		_return = generatedFiles;
   }
 
+};
+
+class CertificateGeneratorCloneFactory : virtual public CertificateGeneratorIfFactory {
+ private:
+  int count = 0;
+ public:
+  ~CertificateGeneratorCloneFactory() override = default;
+  CertificateGeneratorIf* getHandler(const ::apache::thrift::TConnectionInfo& connInfo) override
+  {
+    std::shared_ptr<TSocket> sock = std::dynamic_pointer_cast<TSocket>(connInfo.transport);
+    std::time_t t = std::time(0);
+    std::tm* now = std::localtime(&t);
+    std::stringstream id;
+    id << (now->tm_year%100) << "-" << std::setfill('0') << std::setw(2) << (now->tm_mon + 1) << "-" << std::setfill('0') << std::setw(2) << (now->tm_hour) << "-" << std::setfill('0') << std::setw(2) << (now->tm_min) << "-" << std::setfill('0') << std::setw(2) << (now->tm_sec) << "_" << sock->getPeerAddress() << "_" << count++;
+    //cout << "Connecting " << id.str() << endl;
+    return new CertificateGeneratorHandler(id.str());
+  }
+  void releaseHandler( CertificateGeneratorIf* handler) override {
+    delete handler;
+  }
 };
 
 int main(int argc, char **argv) {
@@ -111,6 +171,7 @@ int main(int argc, char **argv) {
 			//("w,working-dir", "The working directory", cxxopts::value<string>(), "PATH")
 			//("o,output-dir", "The output directory", cxxopts::value<string>(), "PATH")
 			("p,port", "The port on which the server listens", cxxopts::value<int>())
+			("k,keep-files", "Keep generated files", cxxopts::value<bool>(keepGeneratedFiles))
 			("v,verbose", "Enable output", cxxopts::value<bool>(verbose))
 			("help", "Print help");
 		auto result = options.parse(argc, argv);
@@ -184,15 +245,14 @@ int main(int argc, char **argv) {
 	//Initialize thrift server
 	std::cout << "Initializing server" << std::endl;
 	int port = serverPort;
-	::std::shared_ptr<CertificateGeneratorHandler> handler(new CertificateGeneratorHandler());
-	::std::shared_ptr<TProcessor> processor(new CertificateGeneratorProcessor(handler));
-	::std::shared_ptr<TServerTransport> serverTransport(new TServerSocket(port));
-	::std::shared_ptr<TTransportFactory> transportFactory(new TBufferedTransportFactory());
-	::std::shared_ptr<TProtocolFactory> protocolFactory(new TBinaryProtocolFactory());
+	::std::shared_ptr<CertificateGeneratorProcessorFactory> processorFactory(std::make_shared<CertificateGeneratorProcessorFactory>(std::make_shared<CertificateGeneratorCloneFactory>()));
+	::std::shared_ptr<TServerTransport> serverTransport(std::make_shared<TServerSocket>(port));
+	::std::shared_ptr<TTransportFactory> transportFactory(std::make_shared<TBufferedTransportFactory>());
+	::std::shared_ptr<TProtocolFactory> protocolFactory(std::make_shared<TBinaryProtocolFactory>());
 
 	//Open thrift server
 	std::cout << "Starting server" << std::endl;
-	TSimpleServer server(processor, serverTransport, transportFactory, protocolFactory);
+	TThreadedServer server(processorFactory, serverTransport, transportFactory, protocolFactory);
 	server.serve();
 	return 0;
 }
