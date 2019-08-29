@@ -57,9 +57,14 @@ Batch::Batch(json batchConfiguration){
 		//Load templates
 		cout << "Loading Templates" << endl;
 		for(string templateFile:batchConfiguration["templates"]){
-			cout << templateFile << endl;
+			filesystem::path templateFilePath(templateFile);
+			if(templateFilePath.is_relative()){
+				templateFilePath = batchConfiguration["workingDirectory"].get<string>();
+				templateFilePath.append(templateFile);
+			}
+			cout << "Loading template file " << templateFilePath << endl;
 			ifstream input;
-			input.open(templateFile, ios::in);
+			input.open(templateFilePath, ios::in);
 			if(!input){
 				stringstream message;
 				message << "Error reading template file " << templateFile;
@@ -89,16 +94,35 @@ Batch::Batch(json batchConfiguration){
 		//Copy resources to working directory
 		cout << "Copying Resources" << endl;
 		for(string resourceFile:batchConfiguration["resources"]){
-			cout << resourceFile << endl;
-			//Get Path
-			string filename = resourceFile.substr(resourceFile.rfind("/")+1, string::npos);
-			string targetFile = workingDirectory;
-			targetFile.append(filename);
-			ofstream output(targetFile, ios::out | ios::binary);
-			ifstream input(resourceFile, ios::in | ios::binary);
-			output << input.rdbuf();
-			output.close();
-			input.close();
+			filesystem::path resourceFilePath(resourceFile);
+			if(resourceFilePath.is_relative()){
+				resourceFilePath = batchConfiguration["workingDirectory"].get<string>();
+				resourceFilePath.append(resourceFile);
+			}
+			cout << "Loading ressource file " << resourceFile << endl;
+			//Get target Path
+			filesystem::path targetFilePath(workingDirectory);
+			targetFilePath.append(resourceFilePath.filename().string());
+			
+			//Check if file is already there
+			error_code ec;
+			if( !filesystem::equivalent(targetFilePath, resourceFilePath, ec) ){
+				ifstream input(resourceFilePath, ios::in | ios::binary);
+				if(!input){
+					stringstream message;
+					message << "Error reading resource file " << resourceFilePath.string();
+					throw FileAccessError(message.str());
+				}
+				ofstream output(targetFilePath, ios::out | ios::binary);
+				if(!input){
+					stringstream message;
+					message << "Error writing resource file " << targetFilePath.string();
+					throw FileAccessError(message.str());
+				}
+				output << input.rdbuf();
+				output.close();
+				input.close();
+			}
 		}
 	}catch(const nlohmann::detail::exception&){
 		stringstream message;

@@ -2,7 +2,7 @@
 
 namespace cpp CertificateGeneratorThrift
 
-struct GeneratedFile {
+struct File {
     1: required string name;
     2: required binary content;
 }
@@ -15,10 +15,20 @@ exception InvalidTemplate {
 1: string message,
 }
 
-exception UnableToWriteFile {
+exception InvalidRessource {
+1: string message,
+}
+
+exception InternalServerError {
 1: string message,
 }
 
 service CertificateGenerator {
-  list<GeneratedFile> generateCertificates(1:string configuration),
+  void setConfigurationData(1:string configuration),
+  void addResourceFile(1:File resourceFile),
+  void addTemplateFile(1:File templateFile),
+  void addResourceFiles(1:list<File> resourceFiles),
+  void addTemplateFiles(1:list<File> templateFiles),
+  bool checkJob(),
+  list<File> generateCertificates(),
 }

@@ -23,6 +23,8 @@ int main(int argc, char **argv) {
 	
 	//Parse options
 	string batchConfigurationFile;
+	vector<string> templateFilePaths;
+	vector<string> resourceFilePaths;
 	string outputDirectory;
 	string serverAddress;
 	int serverPort;
@@ -31,6 +33,8 @@ int main(int argc, char **argv) {
 		cxxopts::Options options(argv[0], "Certificate generator client");
 		options.add_options()
 			("c,configuration", "A configuration file", cxxopts::value<string>(), "FILE")
+			("t,templates", "Template files", cxxopts::value<std::vector<string>>(), "FILE")
+			("r,resources", "Resource files", cxxopts::value<std::vector<string>>())
 			("h,host", "The generator server host", cxxopts::value<string>())
 			("p,port", "The generator server port", cxxopts::value<int>())
 			("o,output", "Output PDF directory", cxxopts::value<string>()->default_value("./"))
@@ -45,6 +49,12 @@ int main(int argc, char **argv) {
 			batchConfigurationFile = result["configuration"].as<string>();
 		}else{
 			throw cxxopts::OptionException("No configuration file specified");
+		}
+		if (result.count("templates")){
+			templateFilePaths = result["templates"].as<std::vector<string>>();
+		}
+		if (result.count("resources")){
+			resourceFilePaths = result["resources"].as<std::vector<string>>();
 		}
 		outputDirectory = result["output"].as<string>();
 		if (result.count("host")){
@@ -77,6 +87,7 @@ int main(int argc, char **argv) {
 		cerr << "Error creating output directory: " << e.what() << endl;
 		exit(EXIT_FAILURE);
 	}
+
 	//Load configuration file
 	std::cout << "Loading configuration file" << std::endl;
 	stringstream file;
@@ -89,6 +100,26 @@ int main(int argc, char **argv) {
 	file << input.rdbuf();
 	input.close();
 	
+	//Load template files
+	vector<File> templateFiles;
+	for(string filepathStr : templateFilePaths){
+		filesystem::path filepath(filepathStr);
+		File templateFile;
+		templateFile.name = filepath.filename().string();
+		ifstream fileStream(filepath, ios::in | ios::binary);
+		if(!fileStream){
+			cerr << "Error opening template file: " << filepath.string() << endl;
+			exit(EXIT_FAILURE);
+		}
+		stringstream content;
+		content << fileStream.rdbuf();
+		templateFile.content = content.str();
+		fileStream.close();
+		templateFiles.push_back( templateFile );
+	}
+	
+	vector<File> resourceFiles;
+	
 	//Initialize thrift connection
 	std::shared_ptr<TTransport> socket(new TSocket(serverAddress, serverPort));
 	std::shared_ptr<TTransport> transport(new TBufferedTransport(socket));
@@ -100,15 +131,23 @@ int main(int argc, char **argv) {
 	transport->open();
 
 	//Generate certificates
+	std::vector<File> response;
+	std::cout << "Adding resource files" << std::endl;
+	client.addResourceFiles(resourceFiles);
+	std::cout << "Adding template files" << std::endl;
+	client.addTemplateFiles(templateFiles);
+	std::cout << "Setting configuration" << std::endl;
+	client.setConfigurationData(file.str());
+	std::cout << "Checking batch" << std::endl;
+	client.checkJob();
 	std::cout << "Generating certificate" << std::endl;
-	std::vector<GeneratedFile> response;
-	client.generateCertificates(response, file.str());
+	client.generateCertificates(response);
 	
 	//Close thrift connection
 	transport->close();
 	
 	//Write files to disk
-	for(GeneratedFile file : response){
+	for(File file : response){
 		string outputFile = outputDirectory;
 		outputFile.append("/").append(file.name);
 		std::cout << "Saving certificate to file " << outputFile << std::endl;

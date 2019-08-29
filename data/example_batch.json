@@ -37,10 +37,10 @@
 ],
 "tester":"Someone Important",
 "templates":[
-	"data/example_template.tex"
+	"../data/example_template_2.tex"
 ],
 "resources":[
-	"data/certificate-generator.sty"
+	"../res/certificate-generator.sty"
 ],
 "outputDirectory":"output/",
 "workingDirectory":"working/"
