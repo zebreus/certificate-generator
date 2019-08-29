@@ -37,6 +37,8 @@ private:
 	json requiredProperties;
 	json globalProperties;
 	string templateContent;
+	string basename;
+	unsigned int generatedCertificateCounter;
 	
 	/** @brief This method returns a string that replaces the given optional field
     * @param [in] optional is a string representing the optional field
@@ -106,12 +108,14 @@ private:
 	string getSubstitudeNamespace(const string& substitude) const;
 public:
 	/** @brief Constructor that creates a TemplateCertificate
+	* @param [in] basename is a string containing the basename for generated files
     * @param [in] template is a string containing the template for generated certificate
+    * @param [in] globalProperties is a json containing the global properties
     * @return A pointer to the created TemplateCertificate
     *
     * description
     */
-	TemplateCertificate(const string& templateContent, json& globalProperties);
+	TemplateCertificate(const string& basename, const string& templateContent, json& globalProperties);
 	
 	/** @brief This method checks whether the Student is compatible with this template
     * @param [in] student is the Student to be checked 

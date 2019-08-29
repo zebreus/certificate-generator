@@ -1,7 +1,7 @@
 #include "TemplateCertificate.hpp"
 
 
-TemplateCertificate::TemplateCertificate(const string& templateContent, json& globalProperties): globalProperties(globalProperties), templateContent(templateContent) {
+TemplateCertificate::TemplateCertificate(const string& basename, const string& templateContent, json& globalProperties): globalProperties(globalProperties), templateContent(templateContent), basename(basename), generatedCertificateCounter(0) {
 	
 }
 
@@ -13,6 +13,7 @@ bool TemplateCertificate::checkStudent(const Student& student) const{
 
 
 const Certificate TemplateCertificate::generateCertificate(const Student& student){
+	generatedCertificateCounter++;
 	string result = templateContent;
 	
 	//replace use dummy package
@@ -68,14 +69,15 @@ const Certificate TemplateCertificate::generateCertificate(const Student& studen
 
 
 string TemplateCertificate::generateName(const Student& student) const{
-	string name;
+	stringstream name;
+	name << basename << "_" << generatedCertificateCounter;
 	if(student.getProperties()["surname"] != nullptr){
-		name.append(student.getProperties()["surname"]);
+		name << "_" << student.getProperties()["surname"].get<string>();
 	}
 	if(student.getProperties()["name"] != nullptr){
-		name.append(student.getProperties()["name"]);
+		name << "_" << student.getProperties()["name"].get<string>();
 	}
-	return name;
+	return name.str();
 }
 
 //TODO tables not only in student

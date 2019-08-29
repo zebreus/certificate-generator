@@ -73,8 +73,12 @@ Batch::Batch(json batchConfiguration){
 			std::string templateCertificateContent( (std::istreambuf_iterator<char>(input) ),
 					   (std::istreambuf_iterator<char>()) );
 			input.close();
+			
+			//Generate base file name
+			string basename = templateFilePath.stem();
+			
 			//TODO Maybe not push everything as global
-			templateCertificates.push_back(TemplateCertificate(templateCertificateContent, batchConfiguration));
+			templateCertificates.push_back(TemplateCertificate(basename, templateCertificateContent, batchConfiguration));
 		}
 		
 		//Load directories
