@@ -35,4 +35,9 @@ class LatexMissingError : public std::runtime_error {
 	using std::runtime_error::runtime_error;
 };
 
+//When the xelatex command is not found
+class ConfigurationError : public std::runtime_error {
+	using std::runtime_error::runtime_error;
+};
+
 #endif

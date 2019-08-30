@@ -242,7 +242,8 @@
     std::time_t t = std::time(0);
     std::tm* now = std::localtime(&t);
     std::stringstream id;
-    id << (now->tm_year%100) << "-" << std::setfill('0') << std::setw(2) << (now->tm_mon + 1) << "-" << std::setfill('0') << std::setw(2) << (now->tm_hour) << "-" << std::setfill('0') << std::setw(2) << (now->tm_min) << "-" << std::setfill('0') << std::setw(2) << (now->tm_sec) << "_" << sock->getPeerAddress() << "_" << count++ ;
+    //id << (now->tm_year%100) << "-" << std::setfill('0') << std::setw(2) << (now->tm_mon + 1) << "-" << std::setfill('0') << std::setw(2) << (now->tm_hour) << "-" << std::setfill('0') << std::setw(2) << (now->tm_min) << "-" << std::setfill('0') << std::setw(2) << (now->tm_sec) << "_" << sock->getPeerAddress() << "_" << count++ ;
+    id << (now->tm_year%100) << "-" << std::setfill('0') << std::setw(2) << (now->tm_mon + 1) << "-" << std::setfill('0') << std::setw(2) << (now->tm_hour) << "-" << std::setfill('0') << std::setw(2) << (now->tm_min) << "-" << std::setfill('0') << std::setw(2) << (now->tm_sec) << "_" << count++ ;
     return new CertificateGeneratorHandler(id.str());
   }
   

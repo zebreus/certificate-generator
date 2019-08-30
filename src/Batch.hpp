@@ -6,11 +6,15 @@
 #include <vector>
 #include <iostream>
 #include <fstream>
+#include <thread>
+#include <mutex>
 #include "Student.hpp"
 #include "TemplateCertificate.hpp"
 #include "Certificate.hpp"
 #include <filesystem>
 #include "Exceptions.hpp"
+#include <semaphore.h> 
+#include "Configuration.hpp"
 
 using json = nlohmann::json;
 using namespace std;

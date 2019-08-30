@@ -20,7 +20,6 @@ bool Batch::check() const{
 
 
 void Batch::generateCertificates(){
-	//TODO Zeit messen und wenn nötig Multithreading
 	for(TemplateCertificate templateCertificate: templateCertificates){
 		for(Student student: students){
 			certificates.push_back(templateCertificate.generateCertificate(student));
@@ -30,11 +29,30 @@ void Batch::generateCertificates(){
 
 
 void Batch::outputCertificates(){
-	//TODO Zeit messen und wenn nötig Multithreading und WorkingDirectory im Arbeitsspeicher erstellen
 	outputFiles.clear();
-	for(Certificate certificate : certificates){
-		string generatedPDF = certificate.generatePDF(workingDirectory,outputDirectory);
-		outputFiles.push_back(generatedPDF);
+	if( CONFIG.useThreads ){
+		vector<thread> threads;
+		mutex m;
+		sem_t remainingWorkplaces;
+		sem_init(&remainingWorkplaces, 0, CONFIG.maxWorkersPerBatch);
+		for(Certificate certificate : certificates){
+			threads.emplace_back([=, &m, &remainingWorkplaces](){
+				sem_wait(&remainingWorkplaces);
+				string generatedPDF = certificate.generatePDF(workingDirectory,outputDirectory);
+				m.lock();
+				outputFiles.push_back(generatedPDF);
+				m.unlock();
+				sem_post(&remainingWorkplaces);
+			});
+		}
+		for(thread & t : threads){
+			t.join();
+		}
+	}else{
+		for(Certificate certificate : certificates){
+			string generatedPDF = certificate.generatePDF(workingDirectory,outputDirectory);
+			outputFiles.push_back(generatedPDF);
+		}
 	}
 }
 

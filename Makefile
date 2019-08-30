@@ -18,9 +18,10 @@ CPPFLAGS = -Wall -Wformat -Os -std=c++17
 #Sourcecode and flags
 MAIN_SOURCES = $(MAIN)/Certificate.cpp $(MAIN)/Batch.cpp 
 MAIN_SOURCES += $(MAIN)/TemplateCertificate.cpp $(MAIN)/Student.cpp
+MAIN_SOURCES += $(MAIN)/Configuration.cpp
 MAIN_OBJS = $(addsuffix .o, $(basename $(MAIN_SOURCES)))
 MAIN_CPP = -I$(MAIN)/ -I$(NLOHMANN_JSON)/
-MAIN_LDFLAGS = 
+MAIN_LDFLAGS = -lpthread
 
 THRIFT_SOURCES = $(THRIFT_GENERATED)/$(basename $(THRIFTFILE)).cpp
 THRIFT_SOURCES += $(THRIFT_GENERATED)/$(basename $(THRIFTFILE))_constants.cpp
@@ -88,6 +89,12 @@ $(OUTPUT)/$(LOCAL_EXE): $(LOCAL_OBJS) $(MAIN_OBJS)
 
 clean:
 	rm -f $(LOCAL_OBJS) $(MAIN_OBJS) $(SERVER_OBJS) $(CLIENT_OBJS) $(THRIFT_OBJS)
+	
+distclean: clean
+	rm -rf $(OUTPUT)
+	
+latexclean:
+	rm -rf *.pdf *.aux *.log */*.pdf */*.aux */*.log output working
 
 thrift:
 	rm -f $(THRIFT_GENERATED)/*
@@ -99,3 +106,4 @@ doku:
 
 docker:
 	docker build --tag=certgen .
+	docker build --tag=alpinexetex res/

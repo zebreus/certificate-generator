@@ -31,11 +31,43 @@ string Certificate::generatePDF(const string& workingDirectory,const string& out
 	
 	//Generate pdf file
 	//Set names and parameters
-	string command = "xelatex";
-	string haltOnErrorParameter = "-halt-on-error";
-	string inputFileParameter(name);
-	inputFileParameter.append(".tex");
-	string interactionParameter = "-interaction=batchmode";
+	vector<string> arguments;
+	if( CONFIG.docker ){
+		arguments.push_back("docker");
+		arguments.push_back("run");
+		arguments.push_back("--rm");
+		arguments.push_back("-v");
+		string mount = filesystem::canonical( filesystem::path(workingDirectory) ).string();
+		mount.append(":/source/");
+		arguments.push_back(mount);
+		arguments.push_back("-w=/source/");
+		arguments.push_back("--network=none");
+		arguments.push_back("--security-opt=no-new-privileges");
+		arguments.push_back("--ipc=none");
+		string memory = "--memory=";
+		memory.append( to_string(CONFIG.maxMemoryPerWorker) );
+		arguments.push_back(memory);
+		string user = "--user=";
+		user.append( to_string( getuid() ) );
+		arguments.push_back(user);
+		arguments.push_back("--cap-drop=ALL");
+		arguments.push_back("alpinexetex");
+	}
+	
+	arguments.push_back("xelatex");
+	arguments.push_back("-halt-on-error");
+	arguments.push_back("-interaction=batchmode");
+	arguments.push_back("-no-shell-escape");
+	string inputFileArgument(name);
+	inputFileArgument.append(".tex");
+	arguments.push_back(inputFileArgument);
+
+	char* charguments[50];
+	for(unsigned int i = 0; i < arguments.size() ; i++){
+		charguments[i] = const_cast<char*>(arguments[i].c_str());
+	}
+	charguments[arguments.size()] = nullptr;
+	
 	//Fork for latex process
 	int childPid;
 	if ((childPid = vfork()) == -1) {
@@ -44,24 +76,66 @@ string Certificate::generatePDF(const string& workingDirectory,const string& out
 		message << "Error while forking, vfork() returned childPID -1";
 		throw ForkFailedError(message.str());
 	} else if (childPid == 0) {
+		//If the server is set to docker this effects just the docker run
+		//command, not the container.
+		
+		//Set cpu time limit
+		rlimit cpulimit;
+		cpulimit.rlim_cur = CONFIG.maxCpuTimePerWorker;
+		cpulimit.rlim_max = CONFIG.maxCpuTimePerWorker+1;
+		setrlimit(RLIMIT_CPU, &cpulimit);
+		
+		//Set memory limit
+		rlimit memlimit;
+		memlimit.rlim_cur = CONFIG.maxMemoryPerWorker;
+		memlimit.rlim_max = CONFIG.maxMemoryPerWorker;
+		setrlimit(RLIMIT_AS, &memlimit);
+		
+		//Increase niceness
+		nice(5);
+		
 		//Change into workingDirectory
 		chdir(workingDirectory.c_str());
-		//Execute latex in child process
-		execlp(command.c_str(), command.c_str(), haltOnErrorParameter.c_str(), interactionParameter.c_str(), inputFileParameter.c_str(), NULL);
+		execvp(charguments[0], charguments);
 		//Error, exec returned
 		stringstream message;
-		message << "Error while starting " << command << ", probably texlive is not installed or not in path";
+		message << "Error while starting " << charguments[0] << ", probably texlive is not installed or not in path";
 		throw LatexMissingError(message.str());
 	} else {
 		//wait for latex to finish
 		//TODO timeout
+
+		//Wait until process has finished, or timeout occurred
 		int status;
-		waitpid(childPid, &status, 0);
+		int result = 0;
+		chrono::time_point end = chrono::system_clock::now()+chrono::seconds(CONFIG.workerTimeout);
+		chrono::time_point now = chrono::system_clock::now();
+		result = waitpid(childPid, &status, WNOHANG);
+		while(result == 0){
+			this_thread::sleep_for(70ms);
+			now = chrono::system_clock::now();
+			if(end < now){
+				if(end < (now + 2s)){
+					kill(childPid, SIGKILL);
+				}else{
+					kill(childPid, SIGTERM);
+				}
+			}
+			
+			result = waitpid(childPid, &status, WNOHANG);
+		}
+		
+		if(result < 0){
+			stringstream message;
+			message << "Error while waiting for " << charguments[0];
+			throw LatexExecutionError(message.str());
+		}
+		
 		//Check if latex was successful
 		if(status != EXIT_SUCCESS){
 			//Error, latex failed
 			stringstream message;
-			message << "Error while executing " << command << ", it exited with code " << status;
+			message << "Error while executing " << charguments[0] << ", it exited with code " << status;
 			throw LatexExecutionError(message.str());
 		}
 	}
@@ -94,6 +168,6 @@ string Certificate::generatePDF(const string& workingDirectory,const string& out
 		finalPdf.close();
 		temporaryPdf.close();
 	}
-	
 	return finalPdfPath;
+	
 }

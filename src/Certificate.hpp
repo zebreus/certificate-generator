@@ -8,7 +8,13 @@
 #include <wait.h>
 #include <cstring>
 #include <iostream>
+#include <vector>
+#include <filesystem>
+#include <sys/resource.h>
 #include "Exceptions.hpp"
+#include "Configuration.hpp"
+#include <chrono>
+#include <thread>
 
 using namespace std;
 
