@@ -121,7 +121,7 @@ Batch::Batch(json batchConfiguration){
 				resourceFilePath = batchConfiguration["workingDirectory"].get<string>();
 				resourceFilePath.append(resourceFile);
 			}
-			cout << "Loading ressource file " << resourceFile << endl;
+			cout << "Loading resource file " << resourceFile << endl;
 			//Get target Path
 			filesystem::path targetFilePath(workingDirectory);
 			targetFilePath.append(resourceFilePath.filename().string());

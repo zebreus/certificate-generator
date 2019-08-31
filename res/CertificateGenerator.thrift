@@ -15,7 +15,7 @@ exception InvalidTemplate {
 1: string message,
 }
 
-exception InvalidRessource {
+exception InvalidResource {
 1: string message,
 }
 

@@ -67,6 +67,8 @@ class CertificateGeneratorHandler : virtual public CertificateGeneratorIf {
   bool checkJob();
   
   void generateCertificates(std::vector<File> & _return);
+  
+  bool sanitizeFilename(string& filename);
 };
 
 class CertificateGeneratorCloneFactory : virtual public CertificateGeneratorIfFactory {

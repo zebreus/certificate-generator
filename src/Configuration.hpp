@@ -7,9 +7,12 @@
 #define DEFAULT_USE_THREAD true
 #define DEFAULT_MAX_WORKERS 8
 #define DEFAULT_MAX_MEMORY 1000000000
-#define DEFAULT_MAX_CPU 1
+#define DEFAULT_MAX_CPU 10
 #define DEFAULT_WORKER_TIMEOUT 30
 #define DEFAULT_TIMEOUT 300
+
+#define MTOS_HELPER(m) #m
+#define MTOS(m) MTOS_HELPER(m)
 
 #define CONFIG (*(Configuration::get()))
 
