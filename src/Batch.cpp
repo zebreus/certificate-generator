@@ -1,5 +1,7 @@
 #include "Batch.hpp"
 
+sem_t Batch::globalRemainingWorkplaces;
+atomic_char Batch::globalRemainingWorkplacesInitialized = false;
 
 Batch::Batch(vector<Student> students, vector<TemplateCertificate> templateCertificates, const string& workingDirectory, const string& outputDirectory):
 	students(students), templateCertificates(templateCertificates), workingDirectory(workingDirectory), outputDirectory(outputDirectory){
@@ -42,6 +44,7 @@ void Batch::outputCertificates(){
 			threads.emplace_back([=, &outputFilesMutex, &remainingWorkplaces, &failedThreadException, &failedThreadExceptionMutex, &killswitch](){
 				try{
 					sem_wait(&remainingWorkplaces);
+					sem_wait(&globalRemainingWorkplaces);
 					if(!killswitch){
 						string generatedPDF = certificate.generatePDF(workingDirectory,outputDirectory, killswitch);
 						if(!killswitch){
@@ -50,9 +53,11 @@ void Batch::outputCertificates(){
 							lock.unlock();
 						}
 					}
+					sem_post(&globalRemainingWorkplaces);
 					sem_post(&remainingWorkplaces);
 				}catch(...){
 					killswitch = true;
+					sem_post(&globalRemainingWorkplaces);
 					sem_post(&remainingWorkplaces);
 					unique_lock<mutex> lock(failedThreadExceptionMutex);
 					if( !failedThreadException ){
@@ -86,6 +91,10 @@ void Batch::executeBatch(){
 
 
 Batch::Batch(json batchConfiguration){
+	if(!globalRemainingWorkplacesInitialized.fetch_or(true)){
+		cout << "Initialized global workers" << endl;
+		sem_init(&globalRemainingWorkplaces, 0, CONFIG.maxWorkers);
+	}
 	try{
 		//Load students
 		cout << "Loading Students" << endl;

@@ -99,10 +99,18 @@ string Certificate::generatePDF(const string& workingDirectory,const string& out
 		//Increase niceness
 		nice(5);
 		
+		//Redirect stdout to /dev/null
+		int fd = open("/dev/null",O_WRONLY | O_CREAT, 0666);   // open the file /dev/null
+		dup2(fd, 1);
+		
 		//Change into workingDirectory
 		chdir(workingDirectory.c_str());
+		
+		//Start latex
 		execvp(charguments[0], charguments);
+		
 		//Error, exec returned
+		close(fd);
 		stringstream message;
 		message << "Error while starting " << charguments[0] << ", probably texlive is not installed or not in path";
 		throw LatexMissingError(message.str());

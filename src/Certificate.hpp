@@ -16,6 +16,8 @@
 #include <chrono>
 #include <thread>
 #include <atomic>
+#include <fcntl.h>
+#include <sys/stat.h>
 
 using namespace std;
 

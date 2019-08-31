@@ -438,6 +438,7 @@ int main(int argc, char **argv) {
 	int maxCpuTimePerWorker;
 	int workerTimeout;
 	int batchTimeout;
+	int maxWorkers;
 	
 	try{
 		cxxopts::Options options(argv[0], "Certificate generator server");
@@ -453,7 +454,8 @@ int main(int argc, char **argv) {
 		options.add_options("Resource managment")
 			("use-docker", "Each compiler process runs in its own docker container", cxxopts::value<bool>(docker)->default_value(MTOS(DEFAULT_DOCKER))->implicit_value("true"))
 			("use-threads", "Multiple compiler processes/containers run in parallel", cxxopts::value<bool>(useThreads)->default_value(MTOS(DEFAULT_USE_THREAD))->implicit_value("true"))
-			("max-batch-threads", "Maximum number of parallel compiler processes/containers per batch", cxxopts::value<int>(maxWorkersPerBatch)->default_value(MTOS(DEFAULT_MAX_WORKERS)), "INT")
+			("max-batch-compilers", "Maximum number of parallel compiler processes/containers per batch", cxxopts::value<int>(maxWorkersPerBatch)->default_value(MTOS(DEFAULT_MAX_BATCH_WORKERS)), "INT")
+			("max-compilers", "Maximum number of parallel compiler processes/containers", cxxopts::value<int>(maxWorkers)->default_value(MTOS(DEFAULT_MAX_WORKERS)), "INT")
 			("max-compiler-memory", "Maximum memory per compiler process/container", cxxopts::value<int>(maxMemoryPerWorker)->default_value(MTOS(DEFAULT_MAX_MEMORY)), "BYTES")
 			("max-compiler-cpu-time", "Maximum cpu time per compiler process, ignored if --use-docker is set", cxxopts::value<int>(maxCpuTimePerWorker)->default_value(MTOS(DEFAULT_MAX_CPU)), "SECONDS")
 			("compiler-timeout", "Timeout after which compiler processes/containers are killed", cxxopts::value<int>(workerTimeout)->default_value(MTOS(DEFAULT_WORKER_TIMEOUT)), "SECONDS")
@@ -477,7 +479,7 @@ int main(int argc, char **argv) {
 			throw cxxopts::OptionException("No port specified");
 		}
 		if (result.count("max-batch-compilers") && maxWorkersPerBatch <= 0){
-			throw cxxopts::OptionException("Invalid number of parallel compiler processes/containers specified");
+			throw cxxopts::OptionException("Invalid number of parallel compiler processes/containers per batch specified");
 		}
 		if (result.count("max-compiler-memory") && maxMemoryPerWorker <= 0){
 			throw cxxopts::OptionException("Invalid maximum memory per compiler process/container specified");
@@ -485,11 +487,14 @@ int main(int argc, char **argv) {
 		if (result.count("max-compiler-cpu-time") && maxCpuTimePerWorker <= 0){
 			throw cxxopts::OptionException("Invalid maximum cpu time per compiler process specified");
 		}
-		if (result.count("compiler-timeout") && workerTimeout <= 0){
+		if (result.count("compiler-timeout") && workerTimeout < 0){
 			throw cxxopts::OptionException("Invalid timeout per compiler process/container specified");
 		}
-		if (result.count("batch-timeout") && batchTimeout <= 0){
+		if (result.count("batch-timeout") && batchTimeout < 0){
 			throw cxxopts::OptionException("Invalid timeout per batch specified");
+		}
+		if (result.count("max-compilers") && maxWorkers <= 0){
+			throw cxxopts::OptionException("Invalid number of parallel compiler processes/containers specified");
 		}
 	}catch (const cxxopts::OptionException& e){
 		cerr << "Error parsing options: " << e.what() << endl;
@@ -497,7 +502,7 @@ int main(int argc, char **argv) {
 	}
 	
 	//Set configuration
-	Configuration::setup(docker, useThreads, maxWorkersPerBatch, maxMemoryPerWorker, maxCpuTimePerWorker, workerTimeout, batchTimeout);
+	Configuration::setup(docker, useThreads, maxWorkersPerBatch, maxMemoryPerWorker, maxCpuTimePerWorker, workerTimeout, batchTimeout, maxWorkers);
 	
 	//Disable cout
 	if(!verbose){

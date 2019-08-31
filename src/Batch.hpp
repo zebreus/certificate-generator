@@ -41,6 +41,8 @@ private:
 	vector<string> outputFiles;
 	string workingDirectory;
 	string outputDirectory;
+	static sem_t globalRemainingWorkplaces;
+	static atomic_char globalRemainingWorkplacesInitialized;
 	void generateCertificates();
 	void outputCertificates();
 
