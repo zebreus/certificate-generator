@@ -4,40 +4,45 @@
 #include <string>
 #include <stdexcept>
 
+//Superclass for all generator errors
+class GeneratorError : public std::runtime_error {
+	using std::runtime_error::runtime_error;
+};
 
 //When there are syntax errors in the configuration file
-class InvalidConfigurationError : public std::runtime_error {
-	using std::runtime_error::runtime_error;
+class InvalidConfigurationError : public GeneratorError {
+	using GeneratorError::GeneratorError;
 };
 
 //When there are syntax errors in the template file
-class InvalidTemplateError : public std::runtime_error {
-	using std::runtime_error::runtime_error;
+class InvalidTemplateError : public GeneratorError {
+	using GeneratorError::GeneratorError;
 };
 
 //When a file cant be opened
-class FileAccessError : public std::runtime_error {
-	using std::runtime_error::runtime_error;
+class FileAccessError : public GeneratorError {
+	using GeneratorError::GeneratorError;
 };
 
 //When a fork failed
-class ForkFailedError : public std::runtime_error {
-	using std::runtime_error::runtime_error;
+class ForkFailedError : public GeneratorError {
+	using GeneratorError::GeneratorError;
 };
 
 //When latex execution failed
-class LatexExecutionError : public std::runtime_error {
-	using std::runtime_error::runtime_error;
+class LatexExecutionError : public GeneratorError {
+	using GeneratorError::GeneratorError;
 };
 
 //When the xelatex command is not found
-class LatexMissingError : public std::runtime_error {
-	using std::runtime_error::runtime_error;
+class LatexMissingError : public GeneratorError {
+	using GeneratorError::GeneratorError;
 };
 
-//When the xelatex command is not found
-class ConfigurationError : public std::runtime_error {
-	using std::runtime_error::runtime_error;
+//When the internal configuration is tried to be set a second time
+class ConfigurationError : public GeneratorError {
+	using GeneratorError::GeneratorError;
 };
+
 
 #endif

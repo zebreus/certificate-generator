@@ -15,6 +15,7 @@
 #include "Exceptions.hpp"
 #include <semaphore.h> 
 #include "Configuration.hpp"
+#include <atomic>
 
 using json = nlohmann::json;
 using namespace std;

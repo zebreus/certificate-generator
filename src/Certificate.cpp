@@ -14,7 +14,7 @@ const string Certificate::getContent() const{
 	return content;
 }
 
-string Certificate::generatePDF(const string& workingDirectory,const string& outputDirectory) const{
+string Certificate::generatePDF(const string& workingDirectory,const string& outputDirectory, const atomic_bool& killswitch) const{
 	//Write .tex into workingDirectory
 	ofstream output;
 	string completePath = workingDirectory;
@@ -68,6 +68,11 @@ string Certificate::generatePDF(const string& workingDirectory,const string& out
 	}
 	charguments[arguments.size()] = nullptr;
 	
+	//Return if killswitch got set
+	if(killswitch){
+		return "";
+	}
+	
 	//Fork for latex process
 	int childPid;
 	if ((childPid = vfork()) == -1) {
@@ -112,7 +117,7 @@ string Certificate::generatePDF(const string& workingDirectory,const string& out
 		chrono::time_point now = chrono::system_clock::now();
 		result = waitpid(childPid, &status, WNOHANG);
 		while(result == 0){
-			this_thread::sleep_for(70ms);
+			this_thread::sleep_for(10ms);
 			now = chrono::system_clock::now();
 			if(end < now){
 				if(end < (now + 2s)){
@@ -121,8 +126,16 @@ string Certificate::generatePDF(const string& workingDirectory,const string& out
 					kill(childPid, SIGTERM);
 				}
 			}
+			if(killswitch){
+				kill(childPid, SIGKILL);
+			}
 			
 			result = waitpid(childPid, &status, WNOHANG);
+		}
+		
+		//Return if killswitch got set
+		if(killswitch){
+			return "";
 		}
 		
 		if(result < 0){

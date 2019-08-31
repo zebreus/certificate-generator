@@ -15,6 +15,7 @@
 #include "Configuration.hpp"
 #include <chrono>
 #include <thread>
+#include <atomic>
 
 using namespace std;
 
@@ -62,7 +63,7 @@ public:
     * during the generation of the certificate. The temporary files
     * can be removed after this method finished.
     */
-	string generatePDF(const string& workingDirectory,const string& outputDirectory) const;
+	string generatePDF(const string& workingDirectory,const string& outputDirectory, const atomic_bool& killswitch) const;
 };
 
 #endif

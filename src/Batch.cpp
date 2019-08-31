@@ -31,26 +31,48 @@ void Batch::generateCertificates(){
 void Batch::outputCertificates(){
 	outputFiles.clear();
 	if( CONFIG.useThreads ){
-		vector<thread> threads;
-		mutex m;
+		atomic_bool killswitch = false;
+		exception_ptr failedThreadException;
+		mutex failedThreadExceptionMutex;
 		sem_t remainingWorkplaces;
 		sem_init(&remainingWorkplaces, 0, CONFIG.maxWorkersPerBatch);
+		vector<thread> threads;
+		mutex outputFilesMutex;
 		for(Certificate certificate : certificates){
-			threads.emplace_back([=, &m, &remainingWorkplaces](){
-				sem_wait(&remainingWorkplaces);
-				string generatedPDF = certificate.generatePDF(workingDirectory,outputDirectory);
-				m.lock();
-				outputFiles.push_back(generatedPDF);
-				m.unlock();
-				sem_post(&remainingWorkplaces);
+			threads.emplace_back([=, &outputFilesMutex, &remainingWorkplaces, &failedThreadException, &failedThreadExceptionMutex, &killswitch](){
+				try{
+					sem_wait(&remainingWorkplaces);
+					if(!killswitch){
+						string generatedPDF = certificate.generatePDF(workingDirectory,outputDirectory, killswitch);
+						if(!killswitch){
+							unique_lock<mutex> lock(outputFilesMutex);
+							outputFiles.push_back(generatedPDF);
+							lock.unlock();
+						}
+					}
+					sem_post(&remainingWorkplaces);
+				}catch(...){
+					killswitch = true;
+					sem_post(&remainingWorkplaces);
+					unique_lock<mutex> lock(failedThreadExceptionMutex);
+					if( !failedThreadException ){
+						failedThreadException = std::current_exception();
+					}
+					lock.unlock();
+				}
 			});
 		}
-		for(thread & t : threads){
+		for(thread& t: threads){
 			t.join();
+		}
+		unique_lock<mutex> lock(failedThreadExceptionMutex);
+		if(failedThreadException){
+			rethrow_exception(failedThreadException);
 		}
 	}else{
 		for(Certificate certificate : certificates){
-			string generatedPDF = certificate.generatePDF(workingDirectory,outputDirectory);
+			atomic_bool killswitch = false;
+			string generatedPDF = certificate.generatePDF(workingDirectory,outputDirectory, killswitch);
 			outputFiles.push_back(generatedPDF);
 		}
 	}
