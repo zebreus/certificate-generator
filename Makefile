@@ -6,6 +6,7 @@ CLIENT = ./src/client/
 LOCAL = ./src/local/
 NLOHMANN_JSON = ./libs/json/
 CXXOPTS = ./libs/cxxopts/
+SPDLOG = ./libs/spdlog/
 THRIFT_GENERATED = $(MAIN)/gen-cpp/
 RESOURCES = ./res/
 
@@ -20,7 +21,7 @@ MAIN_SOURCES = $(MAIN)/Certificate.cpp $(MAIN)/Batch.cpp
 MAIN_SOURCES += $(MAIN)/TemplateCertificate.cpp $(MAIN)/Student.cpp
 MAIN_SOURCES += $(MAIN)/Configuration.cpp
 MAIN_OBJS = $(addsuffix .o, $(basename $(MAIN_SOURCES)))
-MAIN_CPP = -I$(MAIN)/ -I$(NLOHMANN_JSON)/
+MAIN_CPP = -I$(MAIN)/ -I$(NLOHMANN_JSON)/ -I$(SPDLOG)
 MAIN_LDFLAGS = -lpthread
 
 THRIFT_SOURCES = $(THRIFT_GENERATED)/$(basename $(THRIFTFILE)).cpp
