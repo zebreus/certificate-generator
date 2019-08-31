@@ -269,7 +269,7 @@
 	//Only allow 0-9 a-z A-Z - _  and .
 	string cleanName;
     for(char c: filename){
-		if( (c>'0'&&c<'9') || (c>'a'&&c<'z') || (c>'A'&&c<'Z') || (c=='-') || (c=='_') || (c=='.') ){
+		if( (c>='0'&&c<='9') || (c>='a'&&c<='z') || (c>='A'&&c<='Z') || (c=='-') || (c=='_') || (c=='.') ){
 			cleanName.push_back(c);
 		}else{
 			validName = false;
