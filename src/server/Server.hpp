@@ -43,6 +43,7 @@ using namespace  ::CertificateGeneratorThrift;
 
 json baseConfiguration;
 bool keepGeneratedFiles;
+bool dontCrash;
 
 class CertificateGeneratorHandler : virtual public CertificateGeneratorIf {
  private:

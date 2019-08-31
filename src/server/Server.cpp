@@ -1,6 +1,8 @@
 #include "Server.hpp"
 
   CertificateGeneratorHandler::CertificateGeneratorHandler(const string& id): id(id) {
+    try{
+    
     // Your initialization goes here
     cout << "Connected " << id << endl;
     
@@ -31,15 +33,29 @@
 			throw FileAccessError(message.str());
 		}
 		
+		//initialize templates and resources as arrays
+		batchConfiguration["templates"] = baseConfiguration["templates"];
+		batchConfiguration["resources"] = baseConfiguration["resources"];
 	}catch(const nlohmann::detail::exception& error){
 		stringstream message;
 		message << "Error while adding base configuration: " << error.what();
 		throw InvalidConfigurationError(message.str());
 	}
-	
-	//initialize templates and resources as arrays
-	batchConfiguration["templates"] = baseConfiguration["templates"];
-	batchConfiguration["resources"] = baseConfiguration["resources"];
+		}catch(const GeneratorError& error){
+		InternalServerError terror;
+		terror.message = "Internal server error, try again later.";
+		throw terror;
+	}catch(const TException& terror){
+		throw;
+	}catch(...){
+		if(dontCrash){
+			InternalServerError terror;
+			terror.message = "Internal server error, try again later.";
+			throw terror;
+		}else{
+			throw;
+		}
+	}
   }
   
   CertificateGeneratorHandler::~CertificateGeneratorHandler(){
@@ -47,6 +63,7 @@
   }
     
   void CertificateGeneratorHandler::setConfigurationData(const std::string& configuration) {
+	  try{
     	//Parse received new configuration
     	json newConfiguration;
 		try{
@@ -104,62 +121,109 @@
 		//Replace old configuration with new configuration
 		//TODO thread safty
 		batchConfiguration = newConfiguration;
+	}catch(const GeneratorError& error){
+		InternalServerError terror;
+		terror.message = "Internal server error, try again later.";
+		throw terror;
+	}catch(const TException& terror){
+		throw;
+	}catch(...){
+		if(dontCrash){
+			InternalServerError terror;
+			terror.message = "Internal server error, try again later.";
+			throw terror;
+		}else{
+			throw;
+		}
+	}
   }
   
   void CertificateGeneratorHandler::addResourceFile(const File& receivedResourceFile) {
-	//Sanitize filename
-	File resourceFile(receivedResourceFile);
-	if( !sanitizeFilename(resourceFile.name) ){
-		//Abort if filename is invalid, because it is probably reffered to in the template or other resources
-		stringstream message;
-		message << "Invalid resource filename." << 
-		"Valid filenames must only contain characters from the posix " <<
-		"portable filename character set, only contain the filename " << 
-		"without a path, be shorter than 255 characters, " <<
-		"not start with a hyphen and not be \".\", \"..\" or \"_\"." <<
-		"A valid version of your filename would be: " << resourceFile.name;
-		InvalidResource terror;
-		terror.message = message.str();
-		throw terror;
-	}
-	
-	//Save file to disk
-    filesystem::path resourcePath(batchConfiguration["workingDirectory"]);
-    resourcePath.append( filesystem::path(resourceFile.name).filename().string() );
-    ofstream resourceFileStream(resourcePath, ios::out | ios::binary);
-    if(!resourceFileStream){
+	try{
+		//Sanitize filename
+		File resourceFile(receivedResourceFile);
+		if( !sanitizeFilename(resourceFile.name) ){
+			//Abort if filename is invalid, because it is probably reffered to in the template or other resources
+			stringstream message;
+			message << "Invalid resource filename." << 
+			"Valid filenames must only contain characters from the posix " <<
+			"portable filename character set, only contain the filename " << 
+			"without a path, be shorter than 255 characters, " <<
+			"not start with a hyphen and not be \".\", \"..\" or \"_\"." <<
+			"A valid version of your filename would be: " << resourceFile.name;
+			InvalidResource terror;
+			terror.message = message.str();
+			throw terror;
+		}
+		
+		//Save file to disk
+	    filesystem::path resourcePath(batchConfiguration["workingDirectory"]);
+	    resourcePath.append( filesystem::path(resourceFile.name).filename().string() );
+	    ofstream resourceFileStream(resourcePath, ios::out | ios::binary);
+	    if(!resourceFileStream){
+			InternalServerError terror;
+			terror.message = "Failed to write resourceFile.";
+			throw terror;
+		}
+		resourceFileStream << resourceFile.content;
+		resourceFileStream.close();
+		
+		//Add to list of resources
+		batchConfiguration["resources"].push_back(resourcePath.filename().string());
+	}catch(const GeneratorError& error){
 		InternalServerError terror;
-		terror.message = "Failed to write resourceFile.";
+		terror.message = "Internal server error, try again later.";
 		throw terror;
+	}catch(const TException& terror){
+		throw;
+	}catch(...){
+		if(dontCrash){
+			InternalServerError terror;
+			terror.message = "Internal server error, try again later.";
+			throw terror;
+		}else{
+			throw;
+		}
 	}
-	resourceFileStream << resourceFile.content;
-	resourceFileStream.close();
-	
-	//Add to list of resources
-	batchConfiguration["resources"].push_back(resourcePath.filename().string());
   }
 
   void CertificateGeneratorHandler::addTemplateFile(const File& receivedTemplateFile) {
-	File templateFile(receivedTemplateFile);
-	//Sanitize the filename
-	sanitizeFilename(templateFile.name);
-	
-	//Save file to disk
-    filesystem::path templatePath(batchConfiguration["workingDirectory"]);
-    templatePath.append( filesystem::path(templateFile.name).filename().string() );
-    ofstream templateFileStream(templatePath, ios::out | ios::binary);
-    if(!templateFileStream){
-		stringstream message;
-		message << "Failed to write templateFile.";
+	try{
+		File templateFile(receivedTemplateFile);
+		//Sanitize the filename
+		sanitizeFilename(templateFile.name);
+		
+		//Save file to disk
+	    filesystem::path templatePath(batchConfiguration["workingDirectory"]);
+	    templatePath.append( filesystem::path(templateFile.name).filename().string() );
+	    ofstream templateFileStream(templatePath, ios::out | ios::binary);
+	    if(!templateFileStream){
+			stringstream message;
+			message << "Failed to write templateFile.";
+			InternalServerError terror;
+			terror.message = message.str();
+			throw terror;
+		}
+		templateFileStream << templateFile.content;
+		templateFileStream.close();
+		
+		//Add to list of templates
+		batchConfiguration["templates"].push_back(templatePath.filename().string());
+	}catch(const GeneratorError& error){
 		InternalServerError terror;
-		terror.message = message.str();
+		terror.message = "Internal server error, try again later.";
 		throw terror;
+	}catch(const TException& terror){
+		throw;
+	}catch(...){
+		if(dontCrash){
+			InternalServerError terror;
+			terror.message = "Internal server error, try again later.";
+			throw terror;
+		}else{
+			throw;
+		}
 	}
-	templateFileStream << templateFile.content;
-	templateFileStream.close();
-	
-	//Add to list of templates
-	batchConfiguration["templates"].push_back(templatePath.filename().string());
   }
   
   void CertificateGeneratorHandler::addResourceFiles(const std::vector<File> & resourceFiles) {
@@ -193,6 +257,26 @@
 			InvalidConfiguration terror;
 			terror.message = message.str();
 			throw terror;
+		}catch(const InvalidTemplateError& error){
+			stringstream message;
+			message << "Invalid template: " << error.what();
+			InvalidTemplate terror;
+			terror.message = message.str();
+			throw terror;
+		}catch(const GeneratorError& error){
+			InternalServerError terror;
+			terror.message = "Internal server error, try again later.";
+			throw terror;
+		}catch(const TException& terror){
+			throw;
+		}catch(...){
+			if(dontCrash){
+				InternalServerError terror;
+				terror.message = "Internal server error, try again later.";
+				throw terror;
+			}else{
+				throw;
+			}
 		}
   }
 
@@ -248,6 +332,26 @@
 			InvalidConfiguration terror;
 			terror.message = message.str();
 			throw terror;
+		}catch(const InvalidTemplateError& error){
+			stringstream message;
+			message << "Invalid template: " << error.what();
+			InvalidTemplate terror;
+			terror.message = message.str();
+			throw terror;
+		}catch(const GeneratorError& error){
+			InternalServerError terror;
+			terror.message = "Internal server error, try again later.";
+			throw terror;
+		}catch(const TException& terror){
+			throw;
+		}catch(...){
+			if(dontCrash){
+				InternalServerError terror;
+				terror.message = "Internal server error, try again later.";
+				throw terror;
+			}else{
+				throw;
+			}
 		}
   }
   
@@ -266,7 +370,7 @@
 		validName = false;
 	}
 	
-	//Only allow 0-9 a-z A-Z - _  and .
+	//Only allow 0-9 a-z A-Z - _  and . 
 	string cleanName;
     for(char c: filename){
 		if( (c>='0'&&c<='9') || (c>='a'&&c<='z') || (c>='A'&&c<='Z') || (c=='-') || (c=='_') || (c=='.') ){
@@ -344,6 +448,7 @@ int main(int argc, char **argv) {
 			("p,port", "The port on which the server listens", cxxopts::value<int>())
 			("k,keep-files", "Keep generated files", cxxopts::value<bool>(keepGeneratedFiles))
 			("v,verbose", "Enable output", cxxopts::value<bool>(verbose))
+			("dont-crash", "Catch all exceptions inside handlers", cxxopts::value<bool>(dontCrash))
 			("help", "Print help");
 		options.add_options("Resource managment")
 			("use-docker", "Each compiler process runs in its own docker container", cxxopts::value<bool>(docker)->default_value(MTOS(DEFAULT_DOCKER))->implicit_value("true"))
