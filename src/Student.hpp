@@ -1,10 +1,10 @@
 #ifndef STUDENT_HPP
 #define STUDENT_HPP
 
+#include "Certificate.hpp"
 #include <nlohmann/json.hpp>
 #include <string>
 #include <vector>
-#include "Certificate.hpp"
 
 using json = nlohmann::json;
 using namespace std;
@@ -16,7 +16,7 @@ using namespace std;
  *
  * A student represents a student
  */
-class Student{
+class Student {
 
 private:
 	json properties;
@@ -28,8 +28,8 @@ public:
     *
     */
 	Student(json properties);
-	
-    /** @brief Returns the properties of this Student
+
+	/** @brief Returns the properties of this Student
     * @return A json containing the properties of this Student
     */
 	json getProperties() const;

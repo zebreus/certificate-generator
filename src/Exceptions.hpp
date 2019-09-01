@@ -1,8 +1,8 @@
 #ifndef EXCEPTIONS_HPP
 #define EXCEPTIONS_HPP
 
-#include <string>
 #include <stdexcept>
+#include <string>
 
 //Superclass for all generator errors
 class GeneratorError : public std::runtime_error {
@@ -43,6 +43,5 @@ class LatexMissingError : public GeneratorError {
 class ConfigurationError : public GeneratorError {
 	using GeneratorError::GeneratorError;
 };
-
 
 #endif

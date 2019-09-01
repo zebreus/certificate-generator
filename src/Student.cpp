@@ -1,10 +1,11 @@
 #include "Student.hpp"
 
-
-Student::Student(json properties): properties(properties){
+Student::Student(json properties)
+	: properties(properties)
+{
 }
 
-
-json Student::getProperties() const{
+json Student::getProperties() const
+{
 	return properties;
 }

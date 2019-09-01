@@ -17,36 +17,35 @@
 
 #define CONFIG (*(Configuration::get()))
 
-class Configuration
-{
-	private:
-		static Configuration* singleton;
-		Configuration(bool docker, bool useThreads, unsigned int maxWorkersPerBatch, unsigned int maxMemoryPerWorker, unsigned int maxCpuTimePerWorker, unsigned int workerTimeout, unsigned int batchTimeout, unsigned int maxWorkers);
-		~Configuration();
-		
-	public:
-		static const Configuration* get();
-		static void setup(bool docker, bool useThreads, unsigned int maxWorkersPerBatch, unsigned int maxMemoryPerWorker, unsigned int maxCpuTimePerWorker, unsigned int workerTimeout, unsigned int batchTimeout, unsigned int maxWorkers);
-		static void setup();
-		
-		//Specifies if latex is executed in a container or not.
-		const bool docker;
-		//Specifies if latex is run multithreaded
-		const bool useThreads;
-		//The maximum number of parallel latex compiler processes running per batch
-		const unsigned int maxWorkersPerBatch;
-		//The maximum memory in bytes of each latex compiler process
-		const unsigned int maxMemoryPerWorker;
-		//The maximum cpu time in seconds of each latex compiler process
-		//Does not work with docker containers
-		const unsigned int maxCpuTimePerWorker;
-		//The maximum time a latex compiler process is allowed to run, before it gets terminated
-		const unsigned int workerTimeout;
-		//The maximum time the batch is allowed to run, before it gets terminated
-		//Not implemented yet
-		const unsigned int batchTimeout;
-		//The maximum number of parallel latex compiler processes running
-		const unsigned int maxWorkers;
+class Configuration {
+private:
+	static Configuration* singleton;
+	Configuration(bool docker, bool useThreads, unsigned int maxWorkersPerBatch, unsigned int maxMemoryPerWorker, unsigned int maxCpuTimePerWorker, unsigned int workerTimeout, unsigned int batchTimeout, unsigned int maxWorkers);
+	~Configuration();
+
+public:
+	static const Configuration* get();
+	static void setup(bool docker, bool useThreads, unsigned int maxWorkersPerBatch, unsigned int maxMemoryPerWorker, unsigned int maxCpuTimePerWorker, unsigned int workerTimeout, unsigned int batchTimeout, unsigned int maxWorkers);
+	static void setup();
+
+	//Specifies if latex is executed in a container or not.
+	const bool docker;
+	//Specifies if latex is run multithreaded
+	const bool useThreads;
+	//The maximum number of parallel latex compiler processes running per batch
+	const unsigned int maxWorkersPerBatch;
+	//The maximum memory in bytes of each latex compiler process
+	const unsigned int maxMemoryPerWorker;
+	//The maximum cpu time in seconds of each latex compiler process
+	//Does not work with docker containers
+	const unsigned int maxCpuTimePerWorker;
+	//The maximum time a latex compiler process is allowed to run, before it gets terminated
+	const unsigned int workerTimeout;
+	//The maximum time the batch is allowed to run, before it gets terminated
+	//Not implemented yet
+	const unsigned int batchTimeout;
+	//The maximum number of parallel latex compiler processes running
+	const unsigned int maxWorkers;
 };
 
 #endif

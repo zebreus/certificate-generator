@@ -1,14 +1,14 @@
 #ifndef TEMPLATE_CERTIFICATE_HPP
 #define TEMPLATE_CERTIFICATE_HPP
 
-#include <nlohmann/json.hpp>
-#include <string>
-#include <sstream>
-#include <iostream>
-#include <vector>
 #include "Certificate.hpp"
-#include "Student.hpp"
 #include "Exceptions.hpp"
+#include "Student.hpp"
+#include <iostream>
+#include <nlohmann/json.hpp>
+#include <sstream>
+#include <string>
+#include <vector>
 
 using json = nlohmann::json;
 using namespace std;
@@ -26,20 +26,20 @@ using namespace std;
  *
  */
 
-struct tagPosition{
+struct tagPosition {
 	size_t start;
 	size_t stop;
 };
 
-class TemplateCertificate{
-	
+class TemplateCertificate {
+
 private:
 	json requiredProperties;
 	json globalProperties;
 	string templateContent;
 	string basename;
 	unsigned int generatedCertificateCounter;
-	
+
 	/** @brief This method returns a string that replaces the given optional field
     * @param [in] optional is a string representing the optional field
     * @param [in] student is the student containing the data with which the field will be filled
@@ -48,7 +48,7 @@ private:
     * This method returns you the string, which replaces the optional field 
     */
 	string replaceOptional(const string& optional, const Student& student) const;
-	
+
 	/** @brief This method finds the next optional field in a given string
     * @param [in] full is the string that will be searched
     * @param [in] start is a int, that specifies at which position the search starts
@@ -57,7 +57,7 @@ private:
     * This method finds the next optional field in full after start.
     */
 	tagPosition findOptional(const string& full, int start) const;
-	
+
 	/** @brief This method finds the next substitution in a given string
     * @param [in] full is the string that will be searched
     * @param [in] start is a int, that specifies at which position the search starts
@@ -66,7 +66,7 @@ private:
     * This method finds the next substitution in full after start.
     */
 	tagPosition findSubstitude(const string& full, int start) const;
-	
+
 	/** @brief This method extracts the content from a optional field
     * @param [in] optional a string containing the optional field
     * @return the content of the optional field
@@ -74,7 +74,7 @@ private:
     * This method extracts the content from a optional field
     */
 	string getOptionalContent(const string& optional) const;
-	
+
 	/** @brief This method extracts the name from a optional field
     * @param [in] optional a string containing the optional field
     * @return the name of the optional field
@@ -82,7 +82,7 @@ private:
     * This method extracts the name from a optional field
     */
 	string getOptionalName(const string& optional) const;
-	
+
 	/** @brief This method extracts the namespace from a optional field
     * @param [in] optional a string containing the optional field
     * @return the namespace of the optional field
@@ -90,7 +90,7 @@ private:
     * This method extracts the namespace from a optional field
     */
 	string getOptionalNamespace(const string& optional) const;
-	
+
 	/** @brief This method extracts the name from a substitution
     * @param [in] substitude a string containing the substitution
     * @return the name of the substitution
@@ -98,7 +98,7 @@ private:
     * This method extracts the name from a substitution
     */
 	string getSubstitudeName(const string& substitude) const;
-	
+
 	/** @brief This method extracts the namespace from a substitution
     * @param [in] substitude a string containing the substitution
     * @return the namespace of the substitution
@@ -106,6 +106,7 @@ private:
     * This method extracts the namespace from a substitution
     */
 	string getSubstitudeNamespace(const string& substitude) const;
+
 public:
 	/** @brief Constructor that creates a TemplateCertificate
 	* @param [in] basename is a string containing the basename for generated files
@@ -116,7 +117,7 @@ public:
     * description
     */
 	TemplateCertificate(const string& basename, const string& templateContent, json& globalProperties);
-	
+
 	/** @brief This method checks whether the Student is compatible with this template
     * @param [in] student is the Student to be checked 
     * @return Boolean that indicates whether student is compatible
@@ -124,7 +125,7 @@ public:
     * This method checks whether student is compatible with this template
     */
 	bool checkStudent(const Student& student) const;
-	
+
 	/** @brief This method generates a filename for a student
     * @param [in] student is the Student for whom a filename is generated
     * @return The generated filename
@@ -132,7 +133,7 @@ public:
     * This method generates a filename for a student
     */
 	string generateName(const Student& student) const;
-	
+
 	/** @brief This method generates a certificate based on this template
     * @param [in] student is the Student to be used
     * @return The generated Certificate

@@ -1,23 +1,23 @@
 #ifndef CERTIFICATE_HPP
 #define CERTIFICATE_HPP
 
-#include <string>
-#include <sstream>
-#include <fstream>
-#include <unistd.h>
-#include <wait.h>
-#include <cstring>
-#include <iostream>
-#include <vector>
-#include <filesystem>
-#include <sys/resource.h>
-#include "Exceptions.hpp"
 #include "Configuration.hpp"
-#include <chrono>
-#include <thread>
+#include "Exceptions.hpp"
 #include <atomic>
+#include <chrono>
+#include <cstring>
 #include <fcntl.h>
+#include <filesystem>
+#include <fstream>
+#include <iostream>
+#include <sstream>
+#include <string>
+#include <sys/resource.h>
 #include <sys/stat.h>
+#include <thread>
+#include <unistd.h>
+#include <vector>
+#include <wait.h>
 
 using namespace std;
 
@@ -29,7 +29,7 @@ using namespace std;
  * A certificate stores a generated certificate
  * You can generate a PDF file from it
  */
-class Certificate{
+class Certificate {
 
 private:
 	string name;
@@ -44,18 +44,18 @@ public:
     * This method creates a Certificate with the given filename and content
     */
 	Certificate(const string& name, const string& content);
-	
-    /** @brief Returns the name of the Certificate
+
+	/** @brief Returns the name of the Certificate
     * @return A string that containing the name of the certificate
     */
 	const string getName() const;
-	
-    /** @brief Returns the content of the Certificate
+
+	/** @brief Returns the content of the Certificate
     * @return A string that containing the content of the certificate
     */
 	const string getContent() const;
-	
-    /** @brief Generates a pdf from the certificate
+
+	/** @brief Generates a pdf from the certificate
     * @param [in] workingDirectory a string specifying the directory to be used for temporary files
     * @param [in] outputDirectory a string specifying the directory where the pdf should be put
     * @param [in] killswitch a atomic_bool triggering cancelation of the generation, when set.
@@ -69,7 +69,7 @@ public:
     * If killswitch is set by another thread, it returns as soon as possible
     * with an empty string.
     */
-	string generatePDF(const string& workingDirectory,const string& outputDirectory, const atomic_bool& killswitch) const;
+	string generatePDF(const string& workingDirectory, const string& outputDirectory, const atomic_bool& killswitch) const;
 };
 
 #endif
