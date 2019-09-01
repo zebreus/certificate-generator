@@ -34,6 +34,12 @@
 #include <thrift/transport/TServerSocket.h>
 #include <thrift/transport/TBufferTransports.h>
 
+#include "spdlog/spdlog.h"
+#include "spdlog/async.h"
+#include "spdlog/sinks/stdout_color_sinks.h"
+#include "spdlog/sinks/daily_file_sink.h"
+#include "spdlog/async_logger.h"
+
 using namespace ::apache::thrift;
 using namespace ::apache::thrift::protocol;
 using namespace ::apache::thrift::transport;
@@ -48,10 +54,11 @@ bool dontCrash;
 class CertificateGeneratorHandler : virtual public CertificateGeneratorIf {
  private:
   string id;
+  string peerAddress;
   json batchConfiguration;
  
  public:
-  CertificateGeneratorHandler(const string& id);
+  CertificateGeneratorHandler(const string& id, const string& peerAddress);
   
   ~CertificateGeneratorHandler();
   

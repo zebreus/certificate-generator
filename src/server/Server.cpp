@@ -1,10 +1,9 @@
 #include "Server.hpp"
 
-  CertificateGeneratorHandler::CertificateGeneratorHandler(const string& id): id(id) {
+  CertificateGeneratorHandler::CertificateGeneratorHandler(const string& id, const string& peerAddress): id(id), peerAddress(peerAddress) {
     try{
     
-    // Your initialization goes here
-    cout << "Connected " << id << endl;
+    spdlog::info("Connection from {} (ID:{})", peerAddress, id);
     
     //Create paths for output and working directory
     try{
@@ -59,7 +58,7 @@
   }
   
   CertificateGeneratorHandler::~CertificateGeneratorHandler(){
-	  cout << "Disconnected " << id << endl;
+	  spdlog::info("Disconnect from {} (ID:{})", peerAddress, id);
   }
     
   void CertificateGeneratorHandler::setConfigurationData(const std::string& configuration) {
@@ -281,7 +280,7 @@
   }
 
   void CertificateGeneratorHandler::generateCertificates(std::vector<File> & _return) {
-		
+		cout << this_thread::get_id() << "generate" << endl;
 		try{
 			//Create batch
 			Batch batch(batchConfiguration);
@@ -412,9 +411,8 @@
     std::time_t t = std::time(0);
     std::tm* now = std::localtime(&t);
     std::stringstream id;
-    //id << (now->tm_year%100) << "-" << std::setfill('0') << std::setw(2) << (now->tm_mon + 1) << "-" << std::setfill('0') << std::setw(2) << (now->tm_hour) << "-" << std::setfill('0') << std::setw(2) << (now->tm_min) << "-" << std::setfill('0') << std::setw(2) << (now->tm_sec) << "_" << sock->getPeerAddress() << "_" << count++ ;
     id << (now->tm_year%100) << "-" << std::setfill('0') << std::setw(2) << (now->tm_mon + 1) << "-" << std::setfill('0') << std::setw(2) << (now->tm_hour) << "-" << std::setfill('0') << std::setw(2) << (now->tm_min) << "-" << std::setfill('0') << std::setw(2) << (now->tm_sec) << "_" << count++ ;
-    return new CertificateGeneratorHandler(id.str());
+    return new CertificateGeneratorHandler(id.str(), sock->getPeerAddress());
   }
   
   void CertificateGeneratorCloneFactory::releaseHandler( CertificateGeneratorIf* handler) {
@@ -429,7 +427,6 @@ int main(int argc, char **argv) {
 	string workingDirectory;
 	string outputDirectory;
 	int serverPort;
-	bool verbose = false;
 	
 	bool docker;
 	bool useThreads;
@@ -440,6 +437,11 @@ int main(int argc, char **argv) {
 	int batchTimeout;
 	int maxWorkers;
 	
+	spdlog::level::level_enum logLevel = spdlog::level::info;
+	spdlog::level::level_enum logfileLevel = spdlog::level::info;
+	string logfileDirectory;
+	
+	spdlog::debug("Parsing options");
 	try{
 		cxxopts::Options options(argv[0], "Certificate generator server");
 		options.add_options()
@@ -448,7 +450,6 @@ int main(int argc, char **argv) {
 			//("o,output-dir", "The output directory", cxxopts::value<string>(), "PATH")
 			("p,port", "The port on which the server listens", cxxopts::value<int>())
 			("k,keep-files", "Keep generated files", cxxopts::value<bool>(keepGeneratedFiles))
-			("v,verbose", "Enable output", cxxopts::value<bool>(verbose))
 			("dont-crash", "Catch all exceptions inside handlers", cxxopts::value<bool>(dontCrash))
 			("help", "Print help");
 		options.add_options("Resource managment")
@@ -460,9 +461,19 @@ int main(int argc, char **argv) {
 			("max-compiler-cpu-time", "Maximum cpu time per compiler process, ignored if --use-docker is set", cxxopts::value<int>(maxCpuTimePerWorker)->default_value(MTOS(DEFAULT_MAX_CPU)), "SECONDS")
 			("compiler-timeout", "Timeout after which compiler processes/containers are killed", cxxopts::value<int>(workerTimeout)->default_value(MTOS(DEFAULT_WORKER_TIMEOUT)), "SECONDS")
 			("batch-timeout", "Timeout after which a batch is killed, not implemented yet", cxxopts::value<int>(batchTimeout)->default_value(MTOS(DEFAULT_TIMEOUT)), "SECONDS");
+		options.add_options("Logging")
+			("d,debug", "Output information, errors and debug messages", cxxopts::value<bool>())
+			("i,info", "Output information and errors", cxxopts::value<bool>()->default_value("true"))
+			("e,error", "Output only errors", cxxopts::value<bool>())
+			("q,quiet", "Output nothing", cxxopts::value<bool>())
+			("log-directory", "Write logfiles into this directory", cxxopts::value<string>(logfileDirectory), "DIR")
+			("log-debug", "Output debug messages, information and errors to logfiles", cxxopts::value<bool>())
+			("log-info", "Output information and errors", cxxopts::value<bool>()->default_value("true"))
+			("log-error", "Output only errors", cxxopts::value<bool>())
+			("log-quiet", "Output nothing", cxxopts::value<bool>());
 		auto result = options.parse(argc, argv);
 		if (result.count("help") || result.arguments().size()==0){
-			cout << options.help({"", "Resource managment"}) << std::endl;
+			cout << options.help({"", "Resource managment", "Logging"}) << std::endl;
 			exit(EXIT_SUCCESS);
 		}
 		if (result.count("configuration")){
@@ -496,46 +507,85 @@ int main(int argc, char **argv) {
 		if (result.count("max-compilers") && maxWorkers <= 0){
 			throw cxxopts::OptionException("Invalid number of parallel compiler processes/containers specified");
 		}
+		if (result.count("quiet")){
+			logLevel = spdlog::level::off;
+		}
+		if (result.count("error")){
+			logLevel = spdlog::level::err;
+		}
+		if (result.count("info")){
+			logLevel = spdlog::level::info;
+		}
+		if (result.count("debug")){
+			logLevel = spdlog::level::trace;
+		}
+		if (result.count("log-quiet")){
+			logfileLevel = spdlog::level::off;
+		}
+		if (result.count("log-error")){
+			logfileLevel = spdlog::level::err;
+		}
+		if (result.count("log-info")){
+			logfileLevel = spdlog::level::info;
+		}
+		if (result.count("log-debug")){
+			logfileLevel = spdlog::level::trace;
+		}
 	}catch (const cxxopts::OptionException& e){
-		cerr << "Error parsing options: " << e.what() << endl;
+		spdlog::critical("Error parsing options: {}", e.what());
 		exit(EXIT_FAILURE);
 	}
+	
+	//Set logger
+	spdlog::sink_ptr color = make_shared<spdlog::sinks::stdout_color_sink_mt>();
+	color->set_level(logLevel);
+	spdlog::init_thread_pool(8192, 1);
+	auto logger = std::make_shared<spdlog::async_logger>("", color , spdlog::thread_pool(), spdlog::async_overflow_policy::block);
+	logger->set_level(spdlog::level::trace);
+	if(logfileDirectory != ""){
+		try{
+			filesystem::path baseLogfile(logfileDirectory);
+			filesystem::create_directories(baseLogfile);
+			baseLogfile.append("logfile");
+			spdlog::sink_ptr dailyfile = std::make_shared<spdlog::sinks::daily_file_sink_mt>(baseLogfile.string(), 23, 59);
+			dailyfile->set_level(logfileLevel);
+			logger->sinks().push_back(dailyfile);
+		}catch(const filesystem::filesystem_error& error){
+		
+		}
+	}
+	spdlog::set_default_logger(logger);
+	spdlog::debug("Logger initialized");
 	
 	//Set configuration
 	Configuration::setup(docker, useThreads, maxWorkersPerBatch, maxMemoryPerWorker, maxCpuTimePerWorker, workerTimeout, batchTimeout, maxWorkers);
 	
-	//Disable cout
-	if(!verbose){
-		cout.rdbuf(NULL);
-	}
-	
 	//Load batch configuration
-	std::cout << "Initializing server" << std::endl;
-	std::cout << "Loading base configuration" << std::endl;
+	spdlog::debug("Initializing server");
+	spdlog::debug("Loading base configuration");
 	ifstream input;
 	input.open(batchConfigurationFile, ios::in);
 	if(!input){
-		cerr << "Error reading base configuration file" << endl;
+		spdlog::critical("Error reading base configuration file");
 		exit(EXIT_FAILURE);
 	}
 	try{
 		baseConfiguration = json::parse(input);
-	}catch(const nlohmann::detail::parse_error& error){
-		cerr << "Invalid json in base configuration: " << batchConfigurationFile << endl;
-		cerr << error.what() << endl;
+	}catch(const nlohmann::detail::parse_error& e){
+		spdlog::critical("Invalid json in base configuration {} {}", batchConfigurationFile, e.what());
 		exit(EXIT_FAILURE);
 	}
 	input.close();
 	
 	//Check base configuration
-	std::cout << "Checking base configuration" << std::endl;
+	spdlog::debug("Checking base configuration");
 	bool abort = false;
 	if(!baseConfiguration["outputDirectory"].is_string()){
-		std::cerr << "Error checking configuration: No output directory specified" << std::endl;
+		spdlog::critical("Error checking configuration: No output directory specified");
 		abort = true;
 	}
 	if(!baseConfiguration["workingDirectory"].is_string()){
-		std::cerr << "Error checking configuration: No working directory specified" << std::endl;
+		spdlog::critical("Error checking configuration: No working directory specified");
 		abort = true;
 	}
 	if(abort){
@@ -550,7 +600,7 @@ int main(int argc, char **argv) {
 	::std::shared_ptr<TProtocolFactory> protocolFactory(std::make_shared<TBinaryProtocolFactory>());
 
 	//Open thrift server
-	std::cout << "Starting server" << std::endl;
+	spdlog::info("Starting server");
 	TThreadedServer server(processorFactory, serverTransport, transportFactory, protocolFactory);
 	server.serve();
 	return 0;
