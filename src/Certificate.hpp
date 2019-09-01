@@ -58,12 +58,16 @@ public:
     /** @brief Generates a pdf from the certificate
     * @param [in] workingDirectory a string specifying the directory to be used for temporary files
     * @param [in] outputDirectory a string specifying the directory where the pdf should be put
+    * @param [in] killswitch a atomic_bool triggering cancelation of the generation, when set.
     * @return A string containing the location of the PDF file.
     * Generates a pdf of the certificate into the given outputDirectory
     * 
     * The workingDirectory is used to store temporary files needed 
     * during the generation of the certificate. The temporary files
     * can be removed after this method finished.
+    * 
+    * If killswitch is set by another thread, it returns as soon as possible
+    * with an empty string.
     */
 	string generatePDF(const string& workingDirectory,const string& outputDirectory, const atomic_bool& killswitch) const;
 };
