@@ -593,28 +593,28 @@ int main(int argc, char** argv)
 		if (result.count("max-compilers") && maxWorkers <= 0) {
 			throw cxxopts::OptionException("Invalid number of parallel compiler processes/containers specified");
 		}
-		if (result.count("quiet")) {
+		if (result.count("quiet") && result["quiet"].as<bool>()) {
 			logLevel = spdlog::level::off;
 		}
-		if (result.count("error")) {
+		if (result.count("error") && result["error"].as<bool>()) {
 			logLevel = spdlog::level::err;
 		}
-		if (result.count("info")) {
+		if (result.count("info") && result["info"].as<bool>()) {
 			logLevel = spdlog::level::info;
 		}
-		if (result.count("debug")) {
+		if (result.count("debug") && result["debug"].as<bool>()) {
 			logLevel = spdlog::level::trace;
 		}
-		if (result.count("log-quiet")) {
+		if (result.count("log-quiet") && result["log-quiet"].as<bool>()) {
 			logfileLevel = spdlog::level::off;
 		}
-		if (result.count("log-error")) {
+		if (result.count("log-error") && result["log-error"].as<bool>()) {
 			logfileLevel = spdlog::level::err;
 		}
-		if (result.count("log-info")) {
+		if (result.count("log-info") && result["log-info"].as<bool>()) {
 			logfileLevel = spdlog::level::info;
 		}
-		if (result.count("log-debug")) {
+		if (result.count("log-debug") && result["log-debug"].as<bool>()) {
 			logfileLevel = spdlog::level::trace;
 		}
 	} catch (const cxxopts::OptionException& e) {
