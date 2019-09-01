@@ -105,6 +105,23 @@ thrift:
 doku: 
 	- doxygen Doxyfile
 
+format: $(addprefix format-, $(wildcard $(MAIN)/*.*pp) $(wildcard $(MAIN)/*/*.*pp)))
+
+format-$(MAIN)%.cpp: $(MAIN)%.cpp
+	clang-format $< -style="{BasedOnStyle: webkit, IndentWidth: 4, TabWidth: 4, UseTab: ForContinuationAndIndentation}" > $<_2
+	mv $<_2 $<
+	rm -f $<_2
+
+format-$(MAIN)%.hpp: $(MAIN)%.hpp
+	clang-format $< -style="{BasedOnStyle: webkit, IndentWidth: 4, TabWidth: 4, UseTab: ForContinuationAndIndentation}" > $<_2
+	mv $<_2 $<
+	rm -f $<_2
+
+format-$(MAIN)%.h: $(MAIN)%.h
+	clang-format $< -style="{BasedOnStyle: webkit, IndentWidth: 4, TabWidth: 4, UseTab: ForContinuationAndIndentation}" > $<_2
+	mv $<_2 $<
+	rm -f $<_2
+
 docker:
 	docker build --tag=certgen .
 	docker build --tag=alpinexetex res/
