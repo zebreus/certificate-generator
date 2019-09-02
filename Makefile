@@ -53,7 +53,7 @@ LOCAL_CPP += $(MAIN_CPP)
 LOCAL_LDFLAGS = $(MAIN_LDFLAGS)
 
 #Build rules
-all: $(LOCAL_EXE)
+all: docker
 
 $(MAIN_OBJS): %.o : %.cpp
 	$(CPP) $(CPPFLAGS) $(MAIN_CPP) -c -o $@ $<
