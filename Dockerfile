@@ -7,11 +7,7 @@ RUN pacman -Sy && pacman -S --noconfirm reflector
 #get latex, thrift, boost(for thrift), docker and the build tools
 RUN reflector --latest 10 --sort rate --save /etc/pacman.d/mirrorlist && pacman -Sy && pacman -S --noconfirm texlive-core thrift boost base-devel docker
 
-#build certificate generator
-COPY ./ /certgen/
-RUN make -C /certgen/ thrift && make -C /certgen/ server
-
-#remove build tools and reflector
+#remove reflector
 RUN pacman -Rns --noconfirm reflector
 
 ENV PORT 9090
@@ -35,6 +31,10 @@ ENV LOG_QUIET false
 #ENV COMPILER_TIMEOUT 30
 #ENV BATCH_TIMEOUT 300
 #ENV MAX_COMPILERS 8
+
+#build certificate generator
+COPY ./ /certgen/
+RUN make -C /certgen/ thrift && make -C /certgen/ server
 
 WORKDIR /certgen/
 ENTRYPOINT /certgen/out/server -c $CONFIGURATION_FILE -p $PORT \
