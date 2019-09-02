@@ -78,6 +78,14 @@ CertificateGeneratorHandler::CertificateGeneratorHandler(const string& id, const
 
 CertificateGeneratorHandler::~CertificateGeneratorHandler()
 {
+	if (!keepGeneratedFiles) {
+		try{
+			filesystem::remove_all(batchConfiguration["workingDirectory"].get<std::string>());
+			filesystem::remove_all(batchConfiguration["outputDirectory"].get<std::string>());
+		}catch(...){
+			spdlog::info("{} error removing files on destructor (ID:{})", peerAddress, id);
+		}
+	}
 	spdlog::info("{} disconnected (ID:{})", peerAddress, id);
 }
 
@@ -409,7 +417,6 @@ void CertificateGeneratorHandler::generateCertificates(std::vector<File>& _retur
 
 		//Removing files
 		spdlog::trace("{} Cleaning files (ID:{})", peerAddress, id);
-		filesystem::remove_all(batchConfiguration["workingDirectory"].get<std::string>());
 		if (!keepGeneratedFiles) {
 			filesystem::remove_all(batchConfiguration["outputDirectory"].get<std::string>());
 		}

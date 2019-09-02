@@ -12,7 +12,7 @@ COPY ./ /certgen/
 RUN make -C /certgen/ thrift && make -C /certgen/ server
 
 #remove build tools and reflector
-RUN pacman -Rns --noconfirm base-devel reflector
+RUN pacman -Rns --noconfirm reflector
 
 ENV PORT 9090
 ENV CONFIGURATION_FILE /certgen/data/example_base_2.json
