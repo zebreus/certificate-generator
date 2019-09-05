@@ -34,6 +34,55 @@ class Certificate {
 private:
 	string name;
 	string content;
+	
+	/** @brief Writes the .tex file to the given directory
+    * @param [in] workingDirectory a string specifying the directory where the file should be placed
+    * @return A string containing the location of the PDF file.
+    * 
+    * Writes the .tex file to workingDirectory
+    */
+	void writeToWorkingDirectory(const string& workingDirectory) const;
+	
+	/** @brief Moves generated pdf files from
+    * @param [in] workingDirectory a string specifying the directory where the pdf to be copied is.
+    * @param [in] outputDirectory a string specifying the directory where the pdf should be put
+    * @return A string containing the location of the PDF file.
+    * 
+    * Moves the generated pdf file from workingDirectory to outputDirectory
+    */
+	string moveResultToOutputDirectory(const string& workingDirectory, const string& outputDirectory) const;
+	
+	/** @brief Generates the arguments for execvp to execute latex
+    * @return A vector of strings containing arguments.
+    * 
+    * Generates the arguments for execvp to execute latex
+    */
+	vector<string> generateLatexArguments(const filesystem::path& workingDirectory) const;
+	
+	/** @brief Executes a program
+	* @param [in] arguments a vector of strings containing arguments.
+    * 
+    * Executes the program specified in arguments with execvp.
+    * Before executing the program, the working directory is set to
+    * workingDirectory the resources of the process are limited with
+    * setrlimit, stdout is redirected to /dev/null
+    * and niceness is increased
+    */
+	void executeProgram(vector<string> arguments, const filesystem::path& workingDirectory) const;
+	
+	/** @brief Waits for the process to finish or kills it
+	* @param [in] childPid a pid_t of the process to be waited for
+	* @param [in] killswitch a atomic_bool triggering the sending of a kill signal to the child
+    * @return A int containing the exit status of the process
+    * 
+    * Waits until the process with childPid exits.
+    * If the timeout set in Configuration is exceeded, the process with
+    * childPid gets send a SIGTERM signal every 10ms. If it does not
+    * terminate withing 2 seconds it gets send SIGKILL instead.
+    * If killswitch gets set the process with childPid gets send SIGKILL
+    * every 10ms.
+    */
+	int waitForProcess(const pid_t& childPid, const atomic_bool& killswitch) const;
 
 public:
 	/** @brief Constructor that creates a Certificate
