@@ -41,7 +41,7 @@ private:
     * 
     * Writes the .tex file to workingDirectory
     */
-	void writeToWorkingDirectory(const string& workingDirectory) const;
+	void writeToWorkingDirectory(const filesystem::path& workingDirectory) const;
 	
 	/** @brief Moves generated pdf files from
     * @param [in] workingDirectory a string specifying the directory where the pdf to be copied is.
@@ -50,7 +50,7 @@ private:
     * 
     * Moves the generated pdf file from workingDirectory to outputDirectory
     */
-	string moveResultToOutputDirectory(const string& workingDirectory, const string& outputDirectory) const;
+	filesystem::path moveResultToOutputDirectory(const filesystem::path& workingDirectory, const filesystem::path& outputDirectory) const;
 	
 	/** @brief Generates the arguments for execvp to execute latex
     * @return A vector of strings containing arguments.
@@ -118,7 +118,7 @@ public:
     * If killswitch is set by another thread, it returns as soon as possible
     * with an empty string.
     */
-	string generatePDF(const string& workingDirectory, const string& outputDirectory, const atomic_bool& killswitch) const;
+	filesystem::path generatePDF(const filesystem::path& workingDirectory, const filesystem::path& outputDirectory, const atomic_bool& killswitch) const;
 };
 
 #endif

@@ -16,7 +16,7 @@ const string Certificate::getContent() const
 	return content;
 }
 
-void Certificate::writeToWorkingDirectory(const string& workingDirectory) const{
+void Certificate::writeToWorkingDirectory(const filesystem::path& workingDirectory) const{
 	ofstream output;
 	filesystem::path completePath(workingDirectory);
 	completePath.append(name);
@@ -31,7 +31,7 @@ void Certificate::writeToWorkingDirectory(const string& workingDirectory) const{
 	output.close();
 }
 
-string Certificate::moveResultToOutputDirectory(const string& workingDirectory, const string& outputDirectory) const{
+filesystem::path Certificate::moveResultToOutputDirectory(const filesystem::path& workingDirectory, const filesystem::path& outputDirectory) const{
 	//Set names for moving
 	filesystem::path finalPath(outputDirectory);
 	finalPath.append(name);
@@ -166,10 +166,10 @@ int Certificate::waitForProcess(const pid_t& childPid, const atomic_bool& killsw
 	return status;
 }
 
-string Certificate::generatePDF(const string& workingDirectory, const string& outputDirectory, const atomic_bool& killswitch) const
+filesystem::path Certificate::generatePDF(const filesystem::path& workingDirectory, const filesystem::path& outputDirectory, const atomic_bool& killswitch) const
 {
 	writeToWorkingDirectory(workingDirectory);
-	vector<string> arguments = generateLatexArguments(filesystem::path(workingDirectory));
+	vector<string> arguments = generateLatexArguments(workingDirectory);
 	
 	if (killswitch) return "";
 
@@ -178,7 +178,7 @@ string Certificate::generatePDF(const string& workingDirectory, const string& ou
 	if (childPid == -1) {
 		throw ForkFailedError("Error while forking, vfork() returned childPID -1");
 	} else if (childPid == 0) {
-		executeProgram(arguments, filesystem::path(workingDirectory));
+		executeProgram(arguments, workingDirectory);
 	} else {
 		//Wait until process has finished, or timeout occurred
 		int status = waitForProcess(childPid, killswitch);
@@ -194,6 +194,6 @@ string Certificate::generatePDF(const string& workingDirectory, const string& ou
 		}
 	}
 
-	string finalPdf = moveResultToOutputDirectory(workingDirectory, outputDirectory);
+	filesystem::path finalPdf = moveResultToOutputDirectory(workingDirectory, outputDirectory);
 	return finalPdf;
 }
