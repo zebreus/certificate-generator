@@ -214,7 +214,10 @@ void CertificateGeneratorHandler::addResourceFile(const File& receivedResourceFi
 		resourceFileStream.close();
 
 		//Add to list of resources
-		batchConfiguration["resources"].push_back(resourcePath.filename().string());
+		json temp = batchConfiguration["resources"];
+		if(find(temp.begin(), temp.end(), resourcePath.filename().string() ) == temp.end()){
+			batchConfiguration["resources"].push_back(resourcePath.filename().string());
+		}
 	} catch (const GeneratorError& error) {
 		spdlog::warn("{} failed in addResourceFile (ID:{}) GeneratorError: {}", peerAddress, id, error.what());
 		InternalServerError terror;
@@ -269,7 +272,10 @@ void CertificateGeneratorHandler::addTemplateFile(const File& receivedTemplateFi
 		templateFileStream.close();
 
 		//Add to list of templates
-		batchConfiguration["templates"].push_back(templatePath.filename().string());
+		json temp = batchConfiguration["templates"];
+		if(find(temp.begin(), temp.end(), templatePath.filename().string() ) == temp.end()){
+			batchConfiguration["templates"].push_back(templatePath.filename().string());
+		}
 	} catch (const GeneratorError& error) {
 		spdlog::warn("{} failed in addTemplateFile (ID:{}) GeneratorError: {}", peerAddress, id, error.what());
 		InternalServerError terror;
