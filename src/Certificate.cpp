@@ -62,6 +62,23 @@ filesystem::path Certificate::moveResultToOutputDirectory(const filesystem::path
 	return finalPath;
 }
 
+void Certificate::cleanWorkingDirectory(const filesystem::path& workingDirectory) const{
+	//Generate names of temporary files
+	filesystem::path baseName(workingDirectory);
+	baseName.append(name);
+	filesystem::path pdfFile = baseName;
+	filesystem::path auxFile = baseName;
+	filesystem::path texFile = baseName;
+	pdfFile.replace_extension(".pdf");
+	auxFile.replace_extension(".aux");
+	texFile.replace_extension(".tex");
+	//Remove temporary files
+	error_code ignoreErrors;
+	filesystem::remove(pdfFile, ignoreErrors);
+	filesystem::remove(auxFile, ignoreErrors);
+	filesystem::remove(texFile, ignoreErrors);
+}
+
 vector<string> Certificate::generateLatexArguments(const filesystem::path& workingDirectory) const{
 	vector<string> arguments;
 	//If we are using docker we execute latex in a container
@@ -194,6 +211,9 @@ filesystem::path Certificate::generatePDF(const filesystem::path& workingDirecto
 		}
 	}
 
+	//Move pdf file to output directory
 	filesystem::path finalPdf = moveResultToOutputDirectory(workingDirectory, outputDirectory);
+	//Clean temporary files from working directory
+	cleanWorkingDirectory(workingDirectory);
 	return finalPdf;
 }

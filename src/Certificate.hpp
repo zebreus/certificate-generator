@@ -52,6 +52,13 @@ private:
     */
 	filesystem::path moveResultToOutputDirectory(const filesystem::path& workingDirectory, const filesystem::path& outputDirectory) const;
 	
+	/** @brief Removes temporary files from the working directory
+    * @param [in] workingDirectory a string specifying the directory where the temporary files are.
+    * 
+    * Removes the pdf, aux and tex files from the working directory
+    */
+	void cleanWorkingDirectory(const filesystem::path& workingDirectory) const;
+	
 	/** @brief Generates the arguments for execvp to execute latex
     * @return A vector of strings containing arguments.
     * 
