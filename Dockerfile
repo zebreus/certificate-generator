@@ -34,7 +34,7 @@ ENV LOG_QUIET false
 
 #build certificate generator
 COPY ./ /certgen/
-RUN make -C /certgen/ thrift && make -C /certgen/ server
+RUN make -C /certgen/ distclean && make -C /certgen/ thrift && make -C /certgen/ server
 
 WORKDIR /certgen/
 ENTRYPOINT /certgen/out/server -c $CONFIGURATION_FILE -p $PORT \
