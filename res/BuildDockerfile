@@ -1,4 +1,4 @@
-FROM archlinux/base
+FROM archlinux
 MAINTAINER Lennart E.
 
 #get reflector for fastest mirror
