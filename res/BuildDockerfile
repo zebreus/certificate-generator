@@ -1,0 +1,14 @@
+FROM archlinux/base
+MAINTAINER Lennart E.
+
+#get reflector for fastest mirror
+RUN pacman -Sy && pacman -S --noconfirm reflector
+
+#get latex, thrift, boost(for thrift), docker and the build tools
+RUN reflector --latest 10 --sort rate --save /etc/pacman.d/mirrorlist && pacman -Sy && pacman -S --noconfirm thrift boost base-devel
+
+#remove reflector
+RUN pacman -Rns --noconfirm reflector
+
+#build certificate generator
+WORKDIR /src/
