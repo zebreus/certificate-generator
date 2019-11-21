@@ -81,6 +81,15 @@ TEST_F(CertificateTest, GetContentWorks)
 	EXPECT_EQ(testCertificate->getContent(), testContent);
 }
 
+// Tests that the Certificate::Certificate sets name and content
+TEST_F(CertificateTest, ConstructorWorks)
+{
+	Certificate certificate("NAME", "CONTENT");
+	
+	EXPECT_EQ(certificate.getName(), "NAME");
+	EXPECT_EQ(certificate.getContent(), "CONTENT");
+}
+
 // Tests that the Certificate::writeToWorkingDirectory produces a file with the correct name
 TEST_F(CertificateTest, WriteToWorkingDirectoryCorrectFilename)
 {
@@ -104,10 +113,6 @@ TEST_F(CertificateTest, WriteToWorkingDirectoryCorrectFilename)
 	wrongExtensionFile.append("wrong_extension.tex");
 	correctExtensionFile.append("correct_extension.tex");
 	
-	string ls = "ls ";
-	ls.append(directory);
-	system(ls.c_str());
-	
 	EXPECT_TRUE(filesystem::exists(noExtensionFile)) << "File without an extension is saved under wrong name.";
 	EXPECT_TRUE(filesystem::exists(wrongExtensionFile)) << "File with a wrong extension is saved under wrong name.";
 	EXPECT_TRUE(filesystem::exists(correctExtensionFile)) << "File with a correct(.tex) extension is saved under wrong name.";
@@ -122,10 +127,6 @@ TEST_F(CertificateTest, WriteToWorkingDirectoryCorrectContent)
 	file.append(testCertificate->getName());
 	file.replace_extension(".tex");
 	
-	string ls = "ls ";
-	ls.append(directory);
-	system(ls.c_str());
-	
 	ASSERT_TRUE(filesystem::exists(file)) << "File does not exist";
 	
 	ifstream latexFile;
@@ -135,4 +136,42 @@ TEST_F(CertificateTest, WriteToWorkingDirectoryCorrectContent)
 	string fileContent = fileContentStream.str();
 	
 	ASSERT_EQ(testCertificate->getContent(), fileContent);
+}
+
+// Tests that the Certificate::moveResultToOutputDirectory moves the correct file to the output directory
+TEST_F(CertificateTest, moveResultToOutputDirectoryWorks)
+{
+	//TODO create better test
+	//Create working and output directory path
+	filesystem::path directory = getWorkingDirectory();
+	filesystem::path outputDirectory = directory;
+	outputDirectory.append("output");
+	filesystem::create_directories(outputDirectory);
+	
+	//Create path to file in working directory with the same name as the generated pdf
+	filesystem::path originalFile = directory;
+	originalFile.append(testCertificate->getName());
+	originalFile.replace_extension(".pdf");
+	
+	//Create path to file in output directory with the same name as the generated pdf
+	filesystem::path outputFile = outputDirectory;
+	outputFile.append(testCertificate->getName());
+	outputFile.replace_extension(".pdf");
+	
+	//Write content to original file
+	ofstream originalFileStream(originalFile);
+	originalFileStream << "CONTENT" << flush;
+	originalFileStream.close();
+	
+	testCertificate->moveResultToOutputDirectory(directory, outputDirectory);
+	
+	//Check if output file got created
+	ASSERT_TRUE(filesystem::exists(outputFile)) << "File does not exist";
+	
+	//Read moved/copied file
+	ifstream outputFileStream(outputFile);
+	stringstream outputFileContent;
+	outputFileContent << outputFileStream.rdbuf();
+	
+	ASSERT_EQ(outputFileContent.str(), "CONTENT");
 }
