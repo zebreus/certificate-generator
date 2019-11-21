@@ -1,6 +1,9 @@
 # certificate-generator
 Generates certificates from templates.
 
+## Status
+![](https://screenshot.madmanfred.com/?url=https://concourse.einhorn.jetzt/teams/main/pipelines/certificate-generator?group=build&delay=200&engine=slimerjs&format=jpg&clipRect=120%2C0%2C1024%2C648)
+
 ## Building the project
 
 ### Server
