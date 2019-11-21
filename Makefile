@@ -9,6 +9,8 @@ CXXOPTS = ./libs/cxxopts/
 SPDLOG = ./libs/spdlog/
 THRIFT_GENERATED = $(MAIN)/gen-cpp/
 RESOURCES = ./res/
+TEST = ./test/
+GENERATOR_TEST = ./test/unittest/generator/
 
 #Configuration
 CPP  = g++
@@ -52,6 +54,14 @@ LOCAL_CPP = -I$(CXXOPTS)
 LOCAL_CPP += $(MAIN_CPP)
 LOCAL_LDFLAGS = $(MAIN_LDFLAGS)
 
+#Tests
+GENERATOR_TEST_EXE = generatorTest
+GENERATOR_TEST_SOURCES = $(GENERATOR_TEST)/RunGeneratorTests.cpp
+GENERATOR_TEST_SOURCES = $(GENERATOR_TEST)/Certificate_Test.cpp
+GENERATOR_TEST_OBJS = $(addsuffix .o, $(basename $(GENERATOR_TEST_SOURCES)))
+GENERATOR_TEST_CPP = -I$(MAIN)
+GENERATOR_TEST_LDFLAGS = -lgtest -lgtest_main
+
 #Build rules
 all: docker
 
@@ -69,12 +79,17 @@ $(LOCAL_OBJS): %.o : %.cpp
 	
 $(THRIFT_OBJS): %.o : %.cpp
 	$(CPP) $(CPPFLAGS) $(THRIFT_CPP) -c -o $@ $<
+	
+$(GENERATOR_TEST_OBJS): %.o : %.cpp
+	$(CPP) $(CPPFLAGS) $(GENERATOR_TEST_CPP) -c -o $@ $<
 
 $(SERVER_EXE): $(OUTPUT)/$(SERVER_EXE)
 
 $(CLIENT_EXE): $(OUTPUT)/$(CLIENT_EXE)
 
 $(LOCAL_EXE): $(OUTPUT)/$(LOCAL_EXE)
+
+$(GENERATOR_TEST_EXE): $(OUTPUT)/$(GENERATOR_TEST_EXE)
 
 $(OUTPUT)/$(SERVER_EXE): $(SERVER_OBJS) $(MAIN_OBJS) $(THRIFT_OBJS)
 	mkdir -p $(OUTPUT)
@@ -87,6 +102,10 @@ $(OUTPUT)/$(CLIENT_EXE): $(CLIENT_OBJS) $(MAIN_OBJS) $(THRIFT_OBJS)
 $(OUTPUT)/$(LOCAL_EXE): $(LOCAL_OBJS) $(MAIN_OBJS)
 	mkdir -p $(OUTPUT)
 	$(CXX) -o $@ $^ $(LOCAL_LDFLAGS)
+	
+$(OUTPUT)/$(GENERATOR_TEST_EXE): $(MAIN_OBJS) $(GENERATOR_TEST_OBJS)
+	mkdir -p $(OUTPUT)
+	$(CXX) -o $@ $^ $(GENERATOR_TEST_LDFLAGS) $(MAIN_LDFLAGS)
 
 clean:
 	rm -f $(LOCAL_OBJS) $(MAIN_OBJS) $(SERVER_OBJS) $(CLIENT_OBJS) $(THRIFT_OBJS)
