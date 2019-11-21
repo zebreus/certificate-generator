@@ -35,11 +35,13 @@ private:
 	string name;
 	string content;
 	
-	/** @brief Writes the .tex file to the given directory
+	/** @brief Writes the latex file to the given directory
     * @param [in] workingDirectory a string specifying the directory where the file should be placed
-    * @return A string containing the location of the PDF file.
+    * @return A string containing the location of the latex file.
     * 
-    * Writes the .tex file to workingDirectory
+    * Writes the latex file to workingDirectory. The filename will be
+    * the certificate name with the extension .tex. If the certificate
+    * name already has an extension it will be replaced.
     */
 	void writeToWorkingDirectory(const filesystem::path& workingDirectory) const;
 	
