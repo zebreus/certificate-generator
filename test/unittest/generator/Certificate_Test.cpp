@@ -9,6 +9,7 @@
 #define protected public
 #define private public
 
+#include "Configuration.hpp"
 #include "Certificate.hpp"
 
 #undef protected
@@ -62,6 +63,10 @@ protected:
 			gotWorkingDirectory = true;
 		}
 		return workingDirectory;
+	}
+	
+	void resetConfiguration(){
+		Configuration::singleton = nullptr;
 	}
 	
 private:
@@ -272,4 +277,21 @@ TEST_F(CertificateTest, generatePdfGeneratesRealPDF)
 	string outputFileContent = fileContentStream.str();
 	
 	ASSERT_EQ(outputFileContent.substr(0,4), "%PDF") << "Probably not a valid pdf file";
+}
+
+// Tests that the Certificate::generateLatexArguments uses the values set in Configuration
+TEST_F(CertificateTest, generateLatexArgumentsRespectsConfiguration)
+{
+	filesystem::path directory = getWorkingDirectory();
+	resetConfiguration();
+	Configuration::setup(true, true, 71, 72, 73, 74, 75, 76);
+	vector<string> argumentsA = testCertificate->generateLatexArguments(directory);
+	ASSERT_EQ(argumentsA[0], "docker") << "Arguments do not start with docker, even though CONFIG.docker is true";
+	
+	resetConfiguration();
+	Configuration::setup(false, false, 77, 78, 79, 710, 711, 712);
+	vector<string> argumentsB = testCertificate->generateLatexArguments(directory);
+	ASSERT_NE(argumentsB[0], "docker") << "Arguments do start with docker, even though CONFIG.docker is false";
+	
+	resetConfiguration();
 }
