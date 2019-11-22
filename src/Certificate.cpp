@@ -128,10 +128,10 @@ void Certificate::executeProgram(vector<string> arguments, const filesystem::pat
 	setrlimit(RLIMIT_CPU, &cpulimit);
 
 	//Set memory limit
-	//rlimit memlimit;
-	//memlimit.rlim_cur = CONFIG.maxMemoryPerWorker;
-	//memlimit.rlim_max = CONFIG.maxMemoryPerWorker;
-	//setrlimit(RLIMIT_AS, &memlimit);
+	rlimit memlimit;
+	memlimit.rlim_cur = CONFIG.maxMemoryPerWorker;
+	memlimit.rlim_max = CONFIG.maxMemoryPerWorker;
+	setrlimit(RLIMIT_AS, &memlimit);
 
 	//Increase niceness
 	nice(5);
