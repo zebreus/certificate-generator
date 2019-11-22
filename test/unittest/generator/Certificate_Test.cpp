@@ -287,15 +287,44 @@ TEST_F(CertificateTest, generatePdfGeneratesRealPDF)
 TEST_F(CertificateTest, generateLatexArgumentsRespectsConfiguration)
 {
 	filesystem::path directory = getWorkingDirectory();
+	
+	//Setup Configuration for test A
 	resetConfiguration();
 	Configuration::setup(true, true, 71, 72, 73, 74, 75, 76);
-	vector<string> argumentsA = testCertificate->generateLatexArguments(directory);
-	ASSERT_EQ(argumentsA[0], "docker") << "Arguments do not start with docker, even though CONFIG.docker is true";
 	
+	//Get arguments
+	vector<string> argumentsA = testCertificate->generateLatexArguments(directory);
+	
+	//Check that docker is set
+	EXPECT_EQ(argumentsA[0], "docker") << "Arguments do not start with docker, even though CONFIG.docker is true";
+	
+	//Check that memory is set
+	bool memoryArgumentExists = false;
+	for(string argument: argumentsA){
+		if(argument.substr(0,9) == "--memory="){
+			EXPECT_EQ(argument, "--memory=72") << "Wrong value for memory";
+			memoryArgumentExists = true;
+		}
+	}
+	EXPECT_TRUE(memoryArgumentExists) << "No memory argument in arguments";
+	
+	//Setup Configuration for test B
 	resetConfiguration();
 	Configuration::setup(false, false, 77, 78, 79, 710, 711, 712);
-	vector<string> argumentsB = testCertificate->generateLatexArguments(directory);
-	ASSERT_NE(argumentsB[0], "docker") << "Arguments do start with docker, even though CONFIG.docker is false";
 	
+	//Get arguments
+	vector<string> argumentsB = testCertificate->generateLatexArguments(directory);
+	
+	//Check that docker is not set
+	EXPECT_NE(argumentsB[0], "docker") << "Arguments do start with docker, even though CONFIG.docker is false";
+	
+	//Check that memory is not set
+	for(string argument: argumentsB){
+		if(argument.substr(0,9) == "--memory="){
+			ADD_FAILURE() << "Memory argument should not be supplied, as docker is not set";
+		}
+	}
+	
+	//Reset configuration for next tests
 	resetConfiguration();
 }
