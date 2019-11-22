@@ -101,7 +101,8 @@ vector<string> Certificate::generateLatexArguments(const filesystem::path& worki
 		user.append(to_string(getuid()));
 		arguments.push_back(user);
 		arguments.push_back("--cap-drop=ALL");
-		arguments.push_back("madmanfred/alpine-xetex");
+		//TODO add container to Configuration, instead of hardcoding it here
+		arguments.push_back("madmanfred/alpine-xetex:test");
 	}
 	arguments.push_back("xelatex");
 	arguments.push_back("-halt-on-error");
