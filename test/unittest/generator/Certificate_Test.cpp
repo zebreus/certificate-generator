@@ -248,3 +248,28 @@ TEST_F(CertificateTest, generatePdfGeneratesOneFile)
 	//Check if there is only one file in output directory
 	EXPECT_EQ(files, 1) << "There is not exactly one file in the output directory";
 }
+
+// Tests that the Certificate::generatePDF generates something that really looks like a pdf file
+TEST_F(CertificateTest, generatePdfGeneratesRealPDF)
+{
+	filesystem::path directory = getWorkingDirectory();
+	
+	//Create working and output directories
+	filesystem::path workingDirectory = directory;
+	workingDirectory.append("working");
+	filesystem::create_directories(workingDirectory);
+	filesystem::path outputDirectory = directory;
+	outputDirectory.append("output");
+	filesystem::create_directories(outputDirectory);
+	
+	//Call function
+	filesystem::path outputFilePath = testCertificate->generatePDF(workingDirectory, outputDirectory, false);
+	
+	ifstream outputFile;
+	outputFile.open(outputFilePath);
+	stringstream fileContentStream;
+	fileContentStream << outputFile.rdbuf();
+	string outputFileContent = fileContentStream.str();
+	
+	ASSERT_EQ(outputFileContent.substr(0,4), "%PDF") << "Probably not a valid pdf file";
+}
