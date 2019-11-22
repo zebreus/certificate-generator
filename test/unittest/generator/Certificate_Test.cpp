@@ -175,3 +175,76 @@ TEST_F(CertificateTest, moveResultToOutputDirectoryWorks)
 	
 	ASSERT_EQ(outputFileContent.str(), "CONTENT");
 }
+
+// Tests that the Certificate::generatePDF does not crash with valid input
+TEST_F(CertificateTest, generatePdfGeneratesNotCrashing)
+{
+	filesystem::path directory = getWorkingDirectory();
+	
+	//Create working and output directories
+	filesystem::path workingDirectory = directory;
+	workingDirectory.append("working");
+	filesystem::create_directories(workingDirectory);
+	filesystem::path outputDirectory = directory;
+	outputDirectory.append("output");
+	filesystem::create_directories(outputDirectory);
+	
+	//Call function
+	ASSERT_NO_THROW( testCertificate->generatePDF(workingDirectory, outputDirectory, false) );
+}
+
+// Tests that the Certificate::generatePDF generates the correct file
+TEST_F(CertificateTest, generatePdfGeneratesCorrectFile)
+{
+	filesystem::path directory = getWorkingDirectory();
+	
+	//Create working and output directories
+	filesystem::path workingDirectory = directory;
+	workingDirectory.append("working");
+	filesystem::create_directories(workingDirectory);
+	filesystem::path outputDirectory = directory;
+	outputDirectory.append("output");
+	filesystem::create_directories(outputDirectory);
+	
+	//Call function
+	filesystem::path outputFile = testCertificate->generatePDF(workingDirectory, outputDirectory, false);
+	
+	//Create expected output file path
+	filesystem::path expectedOutputFile = outputDirectory;
+	expectedOutputFile.append(testCertificate->getName());
+	expectedOutputFile.replace_extension(".pdf");
+	
+	//Check if paths are identical
+	EXPECT_EQ(outputFile, expectedOutputFile) << "Output file has unexpected name";
+	
+	//Check if output file exists
+	EXPECT_TRUE(filesystem::exists(outputFile)) << "Returned output file does not exist";
+}
+
+// Tests that the Certificate::generatePDF only generates a pdf file into the output directory
+TEST_F(CertificateTest, generatePdfGeneratesOneFile)
+{
+	filesystem::path directory = getWorkingDirectory();
+	
+	//Create working and output directories
+	filesystem::path workingDirectory = directory;
+	workingDirectory.append("working");
+	filesystem::create_directories(workingDirectory);
+	filesystem::path outputDirectory = directory;
+	outputDirectory.append("output");
+	filesystem::create_directories(outputDirectory);
+	
+	//Call function
+	testCertificate->generatePDF(workingDirectory, outputDirectory, false);
+	
+	//Count files in the output Directory
+	filesystem::directory_iterator outputDirectoryIterator(outputDirectory);
+	int files = 0;
+	while(filesystem::begin(outputDirectoryIterator) != filesystem::end(outputDirectoryIterator)){
+		files++;
+		outputDirectoryIterator++;
+	}
+	
+	//Check if there is only one file in output directory
+	EXPECT_EQ(files, 1) << "There is not exactly one file in the output directory";
+}
