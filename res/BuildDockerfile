@@ -10,5 +10,12 @@ RUN reflector --latest 10 --sort rate --save /etc/pacman.d/mirrorlist && pacman 
 #remove reflector
 RUN pacman -Rns --noconfirm reflector
 
-#build certificate generator
+#add entrypoint script for docker in docker
+RUN git clone https://github.com/karlkfi/concourse-dcind.git ;\
+	cp concourse-dcind/entrypoint.sh /bin/entrypoint.sh ;\
+	chmod a+x /bin/entrypoint.sh ;\
+	rm -rf concourse-dcint
+
+#set working directory
 WORKDIR /src/
+ENTRYPOINT ["entrypoint.sh"]
