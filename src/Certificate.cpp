@@ -88,9 +88,9 @@ vector<string> Certificate::generateLatexArguments(const filesystem::path& worki
 		arguments.push_back("--rm");
 		arguments.push_back("-v");
 		string mount = filesystem::canonical(filesystem::path(workingDirectory)).string();
-		mount.append(":/source/");
+		mount.append(":/src/");
 		arguments.push_back(mount);
-		arguments.push_back("-w=/source/");
+		arguments.push_back("-w=/src/");
 		arguments.push_back("--network=none");
 		arguments.push_back("--security-opt=no-new-privileges");
 		arguments.push_back("--ipc=none");
