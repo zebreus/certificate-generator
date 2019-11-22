@@ -143,5 +143,5 @@ format-$(MAIN)%.h: $(MAIN)%.h
 	rm -f $<_2
 
 docker:
-	docker build --tag=certgen .
-	docker build --tag=alpinexetex res/
+	docker build --tag=certgen -f res/ExecuteDockerfile .
+	docker build --tag=alpine-xetex -f res/XetexDockerfile res/
