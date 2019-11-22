@@ -122,23 +122,23 @@ void Certificate::executeProgram(vector<string> arguments, const filesystem::pat
 	charguments[arguments.size()] = nullptr;
 	
 	//Set cpu time limit
-	rlimit cpulimit;
-	cpulimit.rlim_cur = CONFIG.maxCpuTimePerWorker;
-	cpulimit.rlim_max = CONFIG.maxCpuTimePerWorker + 1;
-	setrlimit(RLIMIT_CPU, &cpulimit);
+	//rlimit cpulimit;
+	//cpulimit.rlim_cur = CONFIG.maxCpuTimePerWorker;
+	//cpulimit.rlim_max = CONFIG.maxCpuTimePerWorker + 1;
+	//setrlimit(RLIMIT_CPU, &cpulimit);
 
 	//Set memory limit
-	rlimit memlimit;
-	memlimit.rlim_cur = CONFIG.maxMemoryPerWorker;
-	memlimit.rlim_max = CONFIG.maxMemoryPerWorker;
-	setrlimit(RLIMIT_AS, &memlimit);
+	//rlimit memlimit;
+	//memlimit.rlim_cur = CONFIG.maxMemoryPerWorker;
+	//memlimit.rlim_max = CONFIG.maxMemoryPerWorker;
+	//setrlimit(RLIMIT_AS, &memlimit);
 
 	//Increase niceness
-	nice(5);
+	//nice(5);
 
 	//Redirect stdout to /dev/null
-	int fd = open("/dev/null", O_WRONLY | O_CREAT, 0666); // open the file /dev/null
-	dup2(fd, 1);
+	//int fd = open("/dev/null", O_WRONLY | O_CREAT, 0666); // open the file /dev/null
+	//dup2(fd, 1);
 
 	//Change into workingDirectory
 	chdir(workingDirectory.c_str());
