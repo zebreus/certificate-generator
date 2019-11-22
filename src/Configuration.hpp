@@ -6,7 +6,7 @@
 #define DEFAULT_DOCKER true
 #define DEFAULT_USE_THREAD true
 #define DEFAULT_MAX_BATCH_WORKERS 8
-#define DEFAULT_MAX_MEMORY 20000000000
+#define DEFAULT_MAX_MEMORY 2000000000
 #define DEFAULT_MAX_CPU 10
 #define DEFAULT_WORKER_TIMEOUT 30
 #define DEFAULT_TIMEOUT 300
@@ -46,7 +46,7 @@ private:
     * Its private, to prevent other classes to create a Configuration
     * object other than the one singleton points to.
     */
-	Configuration(bool docker, bool useThreads, unsigned int maxWorkersPerBatch, unsigned int maxMemoryPerWorker, unsigned int maxCpuTimePerWorker, unsigned int workerTimeout, unsigned int batchTimeout, unsigned int maxWorkers);
+	Configuration(bool docker, bool useThreads, unsigned int maxWorkersPerBatch, unsigned  long long int maxMemoryPerWorker, unsigned int maxCpuTimePerWorker, unsigned int workerTimeout, unsigned int batchTimeout, unsigned int maxWorkers);
 	
 	/** @brief Destructor of Configuration
     *
@@ -79,7 +79,7 @@ public:
     * 
     * Throws a ConfigurationError if the singleton is already set.
     */
-	static void setup(bool docker, bool useThreads, unsigned int maxWorkersPerBatch, unsigned int maxMemoryPerWorker, unsigned int maxCpuTimePerWorker, unsigned int workerTimeout, unsigned int batchTimeout, unsigned int maxWorkers);
+	static void setup(bool docker, bool useThreads, unsigned int maxWorkersPerBatch, unsigned  long long int maxMemoryPerWorker, unsigned int maxCpuTimePerWorker, unsigned int workerTimeout, unsigned int batchTimeout, unsigned int maxWorkers);
 	/** @brief Generates a Configuration and sets the singleton
 	* @throw ConfigurationError if the singleton is already set
     * Generates a Configuration with the default values and sets the singleton to it.
@@ -95,7 +95,7 @@ public:
 	//The maximum number of parallel latex compiler processes running per batch
 	const unsigned int maxWorkersPerBatch;
 	//The maximum memory in bytes of each latex compiler process
-	const unsigned int maxMemoryPerWorker;
+	const unsigned long long int maxMemoryPerWorker;
 	//The maximum cpu time in seconds of each latex compiler process
 	//Does not work with docker containers
 	const unsigned int maxCpuTimePerWorker;

@@ -2,7 +2,7 @@
 
 Configuration* Configuration::singleton = nullptr;
 
-Configuration::Configuration(bool docker, bool useThreads, unsigned int maxWorkersPerBatch, unsigned int maxMemoryPerWorker, unsigned int maxCpuTimePerWorker, unsigned int workerTimeout, unsigned int batchTimeout, unsigned int maxWorkers)
+Configuration::Configuration(bool docker, bool useThreads, unsigned int maxWorkersPerBatch, unsigned long long int maxMemoryPerWorker, unsigned int maxCpuTimePerWorker, unsigned int workerTimeout, unsigned int batchTimeout, unsigned int maxWorkers)
 	: docker(docker)
 	, useThreads(useThreads)
 	, maxWorkersPerBatch(maxWorkersPerBatch)
@@ -26,7 +26,7 @@ const Configuration* Configuration::get()
 	return singleton;
 }
 
-void Configuration::setup(bool docker, bool useThreads, unsigned int maxWorkersPerBatch, unsigned int maxMemoryPerWorker, unsigned int maxCpuTimePerWorker, unsigned int workerTimeout, unsigned int batchTimeout, unsigned int maxWorkers)
+void Configuration::setup(bool docker, bool useThreads, unsigned int maxWorkersPerBatch, unsigned long long int maxMemoryPerWorker, unsigned int maxCpuTimePerWorker, unsigned int workerTimeout, unsigned int batchTimeout, unsigned int maxWorkers)
 {
 	if (singleton == nullptr) {
 		singleton = new Configuration(docker, useThreads, maxWorkersPerBatch, maxMemoryPerWorker, maxCpuTimePerWorker, workerTimeout, batchTimeout, maxWorkers);
