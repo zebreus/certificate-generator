@@ -42,6 +42,9 @@ protected:
 	void SetUp() override
 	{
 		testCertificate = make_shared<Certificate>("testName", testContent);
+		
+		//Set maximum memory per worker to 4GB, because tests in concourse will fail if it is not enough.
+		Configuration::setup(DEFAULT_DOCKER, DEFAULT_USE_THREAD, DEFAULT_MAX_BATCH_WORKERS, 4000000000, DEFAULT_MAX_CPU, DEFAULT_WORKER_TIMEOUT, DEFAULT_TIMEOUT, DEFAULT_MAX_WORKERS);
 	}
 	
 	void TearDown() override
@@ -52,6 +55,7 @@ protected:
 			}catch(...){
 			}
 		}
+		Configuration::singleton = nullptr;
 	}
 	
 	//Get a directory that will be removed after test.
