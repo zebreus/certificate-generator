@@ -124,6 +124,10 @@ public:
     * during the generation of the certificate. The temporary files
     * can be removed after this method finished.
     * 
+    * This will produce a pdf file in outputDirectory. The filename will be
+    * the certificate name with the extension .pdf. If the certificate
+    * name already has an extension it will be replaced with .pdf.
+    * 
     * If killswitch is set by another thread, it returns as soon as possible
     * with an empty string.
     */
