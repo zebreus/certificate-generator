@@ -91,16 +91,16 @@ vector<string> Certificate::generateLatexArguments(const filesystem::path& worki
 		mount.append(":/src/");
 		arguments.push_back(mount);
 		arguments.push_back("-w=/src/");
-		arguments.push_back("--network=none");
-		arguments.push_back("--security-opt=no-new-privileges");
-		arguments.push_back("--ipc=none");
-		string memory = "--memory=";
-		memory.append(to_string(CONFIG.maxMemoryPerWorker));
-		arguments.push_back(memory);
+		//arguments.push_back("--network=none");
+		//arguments.push_back("--security-opt=no-new-privileges");
+		//arguments.push_back("--ipc=none");
+		//string memory = "--memory=";
+		//memory.append(to_string(CONFIG.maxMemoryPerWorker));
+		//arguments.push_back(memory);
 		string user = "--user=";
 		user.append(to_string(getuid()));
 		arguments.push_back(user);
-		arguments.push_back("--cap-drop=ALL");
+		//arguments.push_back("--cap-drop=ALL");
 		//TODO add container to Configuration, instead of hardcoding it here
 		arguments.push_back("madmanfred/alpine-xetex:test");
 	}
