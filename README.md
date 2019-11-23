@@ -3,7 +3,7 @@ Generates certificates from templates.
 
 ## Status
 
-[<p align="center"><img src="https://screenshot.madmanfred.com/?url=https://concourse.einhorn.jetzt/teams/main/pipelines&zoom=1.6&engine=slimerjs&format=jpg&width=2000&selector=.card[data-pipeline-name=certificate-generator]&selectorCrop=true&selectorCropPadding=-25"></p>](https://concourse.einhorn.jetzt/teams/main/pipelines/certificate-generator)
+[<p align="center"><img src="https://images.madmanfred.com/certificate-generator-status.jpg"></p>](https://concourse.einhorn.jetzt/teams/main/pipelines/certificate-generator)
 
 ## Building the project
 
