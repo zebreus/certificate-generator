@@ -670,7 +670,7 @@ int main(int argc, char** argv)
 	ifstream input;
 	input.open(batchConfigurationFile, ios::in);
 	if (!input) {
-		spdlog::critical("Error reading base configuration file");
+		spdlog::critical("You need to specify a base configuration file");
 		exit(EXIT_FAILURE);
 	}
 	try {
