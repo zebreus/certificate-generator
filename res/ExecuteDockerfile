@@ -1,7 +1,7 @@
-ARG SERVER_EXECUTABLE
-
 FROM archlinux
 MAINTAINER Lennart E.
+
+ARG SERVER_EXECUTABLE
 
 #get reflector for fastest mirror
 RUN pacman -Sy && pacman -S --noconfirm reflector
