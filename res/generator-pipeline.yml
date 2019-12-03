@@ -1,0 +1,405 @@
+---
+resources:
+  - name: certificate-generator
+    type: git
+    source:
+      uri: https://github.com/Zebreus/certificate-generator.git
+      branch: master
+  - name: certificate-generator-binary
+    type: git
+    source:
+      uri: git@github.com:zebreus/certificate-generator-binary.git
+      branch: master
+      private_key: ((git_bot_key))
+  - name: build-container
+    type: registry-image
+    source:
+      repository: ((registry_username))/certificate-generator-build-container
+      username: ((registry_username))
+      password: ((registry_password))
+      tag: latest
+  - name: xetex-container
+    type: registry-image
+    source:
+      repository: ((registry_username))/alpine-xetex
+      username: ((registry_username))
+      password: ((registry_password))
+      tag: latest
+  - name: server-container
+    type: registry-image
+    source:
+      repository: ((registry_username))/latex-generator-server
+      username: ((registry_username))
+      password: ((registry_password))
+      tag: latest
+  - name: oci-build-task
+    type: registry-image
+    source:
+      repository: vito/oci-build-task
+
+image_resource:
+  type: registry-image
+  source:
+    repository: vito/oci-build-task
+
+jobs:
+  - name: build-build-container
+    public: true
+    plan:
+      - get: certificate-generator
+        trigger: true
+      - get: oci-build-task
+      - task: build-build-container
+        privileged: true
+        image: oci-build-task
+        config:
+          platform: linux
+          params:
+            DOCKERFILE: ./certificate-generator/res/BuildDockerfile
+          inputs:
+          - name: certificate-generator
+          outputs:
+          - name: image
+          caches:
+          - path: cache
+          run:
+            path: build
+      - put: build-container
+        params: {image: image/image.tar}
+  - name: build-thrift
+    public: true
+    plan:
+      - get: certificate-generator
+        trigger: true
+      - get: build-container
+        passed: [build-build-container]
+      - task: make-thrift
+        image: build-container
+        config:
+          platform: linux
+          inputs:
+          - name: certificate-generator
+          outputs:
+          - name: gen-cpp
+            path: certificate-generator/src/gen-cpp
+          run:
+            path: make
+            args: ["thrift"]
+            dir: ./certificate-generator/
+  - name: build-server
+    public: true
+    serial_groups: [deploy-binary]
+    plan:
+      - get: certificate-generator
+        passed: [test-generator]
+        trigger: true
+      - get: build-container
+        passed: [build-build-container]
+      - task: make-thrift
+        image: build-container
+        config:
+          platform: linux
+          inputs:
+          - name: certificate-generator
+          outputs:
+          - name: gen-cpp
+            path: certificate-generator/src/gen-cpp
+          run:
+            path: make
+            args: ["thrift"]
+            dir: ./certificate-generator/
+      - task: make-server
+        image: build-container
+        config:
+          platform: linux
+          inputs:
+          - name: certificate-generator
+          - name: gen-cpp
+            path: certificate-generator/src/gen-cpp
+          outputs:
+          - name: server
+            path: certificate-generator/out
+          run:
+            path: make
+            args: ["server"]
+            dir: ./certificate-generator/
+      - task: put-binarys
+        image: build-container
+        config:
+          platform: linux
+          inputs:
+          - name: server
+          outputs:
+          - name: new-certificate-generator-binary
+            path: certificate-generator-binary
+          run:
+            path: sh
+            args:
+            - -exc
+            - |
+              set -x
+              git clone https://github.com/Zebreus/certificate-generator-binary.git
+              cp -f server/server certificate-generator-binary/
+              cd certificate-generator-binary
+              git config --global user.email "lennart@madmanfred.com"
+              git config --global user.name "build-bot"
+              git add server
+              git commit -m "Added new server binary." || echo "Same version as on git"
+      - put: certificate-generator-binary
+        params:
+          repository: new-certificate-generator-binary
+  - name: build-generator
+    public: true
+    serial_groups: [deploy-binary]
+    plan:
+      - get: certificate-generator
+        passed: [test-generator]
+        trigger: true
+      - get: build-container
+        passed: [build-build-container]
+      - task: make-local
+        image: build-container
+        config:
+          platform: linux
+          inputs:
+          - name: certificate-generator
+          outputs:
+          - name: local
+            path: certificate-generator/out
+          run:
+            path: make
+            args: ["local"]
+            dir: ./certificate-generator/
+      - task: put-binarys
+        image: build-container
+        config:
+          platform: linux
+          inputs:
+          - name: local
+          outputs:
+          - name: new-certificate-generator-binary
+            path: certificate-generator-binary
+          run:
+            path: sh
+            args:
+            - -exc
+            - |
+              set -x
+              mkdir -p generator
+              mv local/local generator/generator
+              git clone https://github.com/Zebreus/certificate-generator-binary.git
+              cp -f generator/generator certificate-generator-binary/
+              cd certificate-generator-binary
+              git config --global user.email "lennart@madmanfred.com"
+              git config --global user.name "build-bot"
+              git add generator
+              git commit -m "Added new local generator binary." || echo "Same version as on git"
+      - put: certificate-generator-binary
+        params:
+          repository: new-certificate-generator-binary
+  - name: build-client
+    public: true
+    serial_groups: [deploy-binary]
+    plan:
+      - get: certificate-generator
+        passed: [test-generator]
+        trigger: true
+      - get: build-container
+        passed: [build-build-container]
+      - task: make-thrift
+        image: build-container
+        config:
+          platform: linux
+          inputs:
+          - name: certificate-generator
+          outputs:
+          - name: gen-cpp
+            path: certificate-generator/src/gen-cpp
+          run:
+            path: make
+            args: ["thrift"]
+            dir: ./certificate-generator/
+      - task: make-client
+        image: build-container
+        config:
+          platform: linux
+          inputs:
+          - name: certificate-generator
+          - name: gen-cpp
+            path: certificate-generator/src/gen-cpp
+          outputs:
+          - name: client
+            path: certificate-generator/out
+          run:
+            path: make
+            args: ["client"]
+            dir: ./certificate-generator/
+      - do:
+        - task: put-binarys
+          image: build-container
+          config:
+            platform: linux
+            inputs:
+            - name: client
+            outputs:
+            - name: new-certificate-generator-binary
+              path: certificate-generator-binary
+            run:
+              path: sh
+              args:
+              - -exc
+              - |
+                set -e
+                set -x
+                git clone https://github.com/Zebreus/certificate-generator-binary.git
+                cp -f client/client certificate-generator-binary/
+                cd certificate-generator-binary
+                git config --global user.email "lennart@madmanfred.com"
+                git config --global user.name "build-bot"
+                git add client
+                git commit -m "Added new client binary." || echo "Same version as on git"
+        - put: certificate-generator-binary
+          params:
+            repository: new-certificate-generator-binary
+  - name: test-generator
+    public: true
+    plan:
+      - get: certificate-generator
+        trigger: true
+      - get: build-container
+        passed: [build-build-container]
+      - get: xetex-container
+        params:
+          format: oci
+        trigger: true
+        passed: [build-xetex-container]
+      - task: build-test-generator
+        image: build-container
+        config:
+          platform: linux
+          inputs:
+          - name: certificate-generator
+          outputs:
+          - name: test
+            path: certificate-generator/out
+          run:
+            path: make
+            args: ["generatorTest"]
+            dir: ./certificate-generator/
+      - task: test-generator
+        privileged: true
+        image: build-container
+        config:
+          platform: linux
+          inputs:
+          - name: test
+          - name: xetex-container
+          run:
+            path: entrypoint.sh
+            args:
+             - bash
+             - -ceux
+             - |
+               ls xetex-container
+               cat xetex-container/digest
+               ls xetex-container/digest
+               docker load -i xetex-container/image.tar
+               #docker tag "$(cat xetex-container/digest)" "$(cat xetex-container/repository):$(cat xetex-container/tag)"
+               test/generatorTest
+  - name: build-server-container
+    public: true
+    plan:
+      - get: certificate-generator
+      - get: certificate-generator-binary
+        trigger: true
+        passed: [build-server]
+      - get: oci-build-task
+      - task: build-server-container
+        privileged: true
+        image: oci-build-task
+        config:
+          platform: linux
+          params:
+            DOCKERFILE: ./certificate-generator/res/ExecuteDockerfile
+            BUILD_ARG_SERVER_EXECUTABLE: ./certificate-generator-binary/server
+          inputs:
+          - name: certificate-generator
+          - name: certificate-generator-binary
+          outputs:
+          - name: image
+          caches:
+          - path: cache
+          run:
+            path: build
+      - put: server-container
+        params: {image: image/image.tar}
+  - name: build-xetex-container
+    public: true
+    plan:
+      - get: certificate-generator
+        trigger: true
+      - get: oci-build-task
+      - task: build-xetex-container
+        privileged: true
+        image: oci-build-task
+        config:
+          platform: linux
+          params:
+            DOCKERFILE: ./certificate-generator/res/XetexDockerfile
+          inputs:
+          - name: certificate-generator
+          outputs:
+          - name: image
+          caches:
+          - path: cache
+          run:
+            path: build
+      - put: xetex-container
+        params: {image: image/image.tar}
+
+
+#groups:
+#- name: prepare
+#  jobs:
+#  - build-build-container
+#- name: build
+#  jobs:
+#  - build-thrift
+#  - build-client
+#  - build-server
+#- name: test
+#  jobs:
+#  - test-generator
+#- name: package
+#  jobs:
+#  - build-server-container
+
+groups:
+- name: all
+  jobs:
+  - build-build-container
+  - build-thrift
+  - build-generator
+  - build-client
+  - build-server
+  - test-generator
+  - build-server-container
+  - build-xetex-container
+- name: build
+  jobs:
+  - build-build-container
+  - build-thrift
+  - build-generator
+  - build-client
+  - build-server
+  - build-server-container
+  - build-xetex-container
+- name: containers
+  jobs:
+  - build-build-container
+  - build-server
+  - build-server-container
+  - build-xetex-container
+- name: test
+  jobs:
+  - test-generator
