@@ -322,6 +322,7 @@ jobs:
           params:
             DOCKERFILE: ./certificate-generator/res/ExecuteDockerfile
             BUILD_ARG_SERVER_EXECUTABLE: ./certificate-generator-binary/server
+            BUILD_ARG_BASE_CONFIGURATION: ./certificate-generator/data/example_base_2.json
           inputs:
           - name: certificate-generator
           - name: certificate-generator-binary

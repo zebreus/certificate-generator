@@ -2,6 +2,7 @@ FROM archlinux
 MAINTAINER Lennart E.
 
 ARG SERVER_EXECUTABLE
+ARG BASE_CONFIGURATION
 
 #get reflector for fastest mirror
 RUN pacman -Sy && pacman -S --noconfirm reflector
@@ -13,17 +14,18 @@ RUN reflector --latest 10 --sort rate --save /etc/pacman.d/mirrorlist && pacman 
 RUN pacman -Rns --noconfirm reflector
 
 #copy in certificate generator server
-COPY ${SERVER_EXECUTABLE} /certgen/out/server
+COPY ${SERVER_EXECUTABLE} /generator/server
+COPY ${BASE_CONFIGURATION} /generator/config/default.json
 
 ENV PORT 9090
-ENV CONFIGURATION_FILE /certgen/data/example_base_2.json
+ENV CONFIGURATION_FILE /generator/config/default.json
 ENV KEEP_FILES false
 ENV DONT_CRASH true
 ENV DEBUG false
 ENV INFO false
 ENV ERROR false
 ENV QUIET false
-ENV LOG_DIRECTORY /log/
+ENV LOG_DIRECTORY /log/generator/
 ENV LOG_DEBUG false
 ENV LOG_INFO false
 ENV LOG_ERROR false
@@ -37,8 +39,8 @@ ENV LOG_QUIET false
 #ENV BATCH_TIMEOUT 300
 #ENV MAX_COMPILERS 8
 
-WORKDIR /certgen/
-ENTRYPOINT /certgen/out/server -c $CONFIGURATION_FILE -p $PORT \
+WORKDIR /generator/
+ENTRYPOINT /generator/server -c $CONFIGURATION_FILE -p $PORT \
 	--dont-crash=$DONT_CRASH --keep-files=$KEEP_FILES \
 	--quiet=$QUIET --debug=$DEBUG --info=$INFO --error=$ERROR \
 	--log-directory=$LOG_DIRECTORY  --log-quiet=$LOG_QUIET \
