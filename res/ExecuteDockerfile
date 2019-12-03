@@ -10,8 +10,12 @@ RUN reflector --latest 10 --sort rate --save /etc/pacman.d/mirrorlist && pacman 
 #remove reflector
 RUN pacman -Rns --noconfirm reflector
 
+RUN echo ${SERVER_EXECUTABLE}
+
 #copy in certificate generator server
 COPY ${SERVER_EXECUTABLE} /certgen/out/server
+
+RUN ls /certgen/out/server
 
 ENV PORT 9090
 ENV CONFIGURATION_FILE /certgen/data/example_base_2.json
