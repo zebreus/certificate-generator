@@ -1,6 +1,9 @@
 # certificate-generator
 Generates certificates from templates.
 
+## Client
+There is a [web based client available](https://github.com/Zebreus/webClient).
+
 ## Status
 
 [<p align="center"><img src="https://images.madmanfred.com/certificate-generator-status.jpg"></p>](https://concourse.einhorn.jetzt/teams/main/pipelines/certificate-generator)
